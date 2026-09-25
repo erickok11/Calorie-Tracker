@@ -1,98 +1,243 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFood } from "@/context/FoodContext";
+import { router } from "expo-router";
+import {
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
 
 export default function HomeScreen() {
+  const calorieGoal = 1800;
+  const proteinGoal = 140;
+
+  const { foods } = useFood();
+
+  const totalCalories = foods.reduce(
+    (sum, food) => sum + food.calories,
+    0
+  );
+
+  const totalProtein = foods.reduce(
+    (sum, food) => sum + food.protein,
+    0
+  );
+
+  const caloriesRemaining = calorieGoal - totalCalories;
+
+  const proteinProgress = Math.min(
+    (totalProtein / proteinGoal) * 100,
+    100
+  );
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.greeting}>Good morning</Text>
+        <Text style={styles.date}>Today</Text>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+        <View style={styles.calorieCard}>
+          <Text style={styles.bigNumber}>{totalCalories}</Text>
+          <Text style={styles.label}>kcal eaten</Text>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+          <View style={styles.divider} />
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+          <Text style={styles.remaining}>
+            {caloriesRemaining} kcal remaining
+          </Text>
+        </View>
+
+        <View style={styles.proteinCard}>
+          <View style={styles.row}>
+            <Text style={styles.sectionTitle}>Protein</Text>
+
+            <Text style={styles.proteinNumber}>
+              {totalProtein} / {proteinGoal}g
+            </Text>
+          </View>
+
+          <View style={styles.progressBackground}>
+            <View
+              style={[
+                styles.progressFill,
+                { width: `${proteinProgress}%` },
+              ]}
+            />
+          </View>
+        </View>
+
+        <Text style={styles.foodTitle}>TODAY'S FOOD</Text>
+
+        {foods.map((food) => (
+          <TouchableOpacity
+            key={food.id}
+            style={styles.foodCard}
+            onPress={() =>
+              router.push({
+                pathname: "/food-details",
+                params: { id: food.id},
+              })
+            }
+          >
+            <View>
+              <Text style={styles.foodName}>{food.name}</Text>
+
+              <Text style={styles.foodInfo}>
+                {food.calories} kcal • {food.protein}g protein
+              </Text>
+            </View>
+
+            <Text style={styles.chevron}>›</Text>
+          </TouchableOpacity>
+        ))}
+
+        <TouchableOpacity 
+          style={styles.addButton}
+          onPress={() => router.push("/add-food")}
+        >
+          <Text style={styles.addButtonText}>+ Add Food</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    backgroundColor: "#F7F7F7",
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+
+  content: {
+    padding: 24,
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+
+  greeting: {
+    fontSize: 30,
+    fontWeight: "700",
+    marginTop: 15,
   },
-  title: {
-    textAlign: 'center',
+
+  date: {
+    fontSize: 17,
+    color: "#777",
+    marginTop: 4,
+    marginBottom: 25,
   },
-  code: {
-    textTransform: 'uppercase',
+
+  calorieCard: {
+    backgroundColor: "white",
+    borderRadius: 22,
+    padding: 28,
+    alignItems: "center",
+    marginBottom: 16,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+
+  bigNumber: {
+    fontSize: 52,
+    fontWeight: "700",
+  },
+
+  label: {
+    color: "#777",
+    fontSize: 16,
+  },
+
+  divider: {
+    width: "100%",
+    height: 1,
+    backgroundColor: "#EEE",
+    marginVertical: 20,
+  },
+
+  remaining: {
+    fontSize: 17,
+    fontWeight: "600",
+  },
+
+  proteinCard: {
+    backgroundColor: "white",
+    borderRadius: 22,
+    padding: 20,
+    marginBottom: 30,
+  },
+
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+
+  proteinNumber: {
+    fontSize: 16,
+    color: "#555",
+  },
+
+  progressBackground: {
+    height: 12,
+    backgroundColor: "#E8E8E8",
+    borderRadius: 20,
+    marginTop: 15,
+    overflow: "hidden",
+  },
+
+  progressFill: {
+    height: "100%",
+    backgroundColor: "#3478F6",
+    borderRadius: 20,
+  },
+
+  foodTitle: {
+    fontSize: 13,
+    color: "#777",
+    fontWeight: "600",
+    marginBottom: 10,
+  },
+
+  foodCard: {
+    backgroundColor: "white",
+    padding: 18,
+    borderRadius: 16,
+    marginBottom: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  foodName: {
+    fontSize: 17,
+    fontWeight: "600",
+  },
+
+  foodInfo: {
+    color: "#777",
+    marginTop: 5,
+  },
+
+  addButton: {
+    backgroundColor: "#3478F6",
+    borderRadius: 16,
+    padding: 17,
+    alignItems: "center",
+    marginTop: 10,
+  },
+
+  addButtonText: {
+    color: "white",
+    fontSize: 17,
+    fontWeight: "600",
+  },
+
+  chevron: {
+    fontSize: 28,
+    color: "#AAA",
   },
 });
