@@ -2,6 +2,22 @@ import * as SQLite from "expo-sqlite";
 
 let db: SQLite.SQLiteDatabase | null = null;
 
+export type FoodRow = {
+    id: number;
+    name: string;
+    amount: number | null;
+    unit: string | null;
+    calories: number;
+    protein: number;
+    date: string;
+};
+
+export type settingsRow = {
+    id: number;
+    calorie_goal: number;
+    protein_goal: number;
+};
+
 export function getLocalDate(){
     const now = new Date();
 
@@ -16,7 +32,8 @@ export async function initializeDatabase() {
         "calorieTracker.db"
     );
 
-    await db.execAsync(`
+    await db.execAsync(
+        `
         CREATE TABLE IF NOT EXISTS foods (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -26,7 +43,22 @@ export async function initializeDatabase() {
             protein REAL NOT NULL,
             date TEXT NOT NULL
         );
-    `);
+        
+        CREATE TABLE IF NOT EXISTS settings (
+            id INTEGER PRIMARY KEY NOT NULL,
+            calorie_goal REAL NOT NULL,
+            protein_goal REAL NOT NULL
+        );
+        `
+    );
+
+    await db.runAsync(
+        `INSERT OR IGNORE INTO settings
+         (id, calorie_goal, protein_goal)
+         VALUES (1, 1800, 140)
+        `
+    );
+
 
     return db;
 }
@@ -64,15 +96,7 @@ export async function insertFood(
     return result;
 }
 
-export type FoodRow = {
-    id: number;
-    name: string;
-    amount: number | null;
-    unit: string | null;
-    calories: number;
-    protein: number;
-    date: string;
-};
+
 
 export async function getFoodsByDate(date: string) {
     const database = await getDatabase();
@@ -123,3 +147,29 @@ export async function updateFoodById(
         id
     );
 }
+
+export async function getSettings() {
+    const database = await getDatabase();
+
+    return await database.getFirstAsync<settingsRow>(
+        "SELECT * FROM settings WHERE id = 1"
+    );
+}
+
+export async function updateGoal(
+    calorieGoal: number,
+    proteinGoal: number
+){
+    const database = await getDatabase();
+    
+    await database.runAsync(
+        `UPDATE settings
+        SET calorie_goal = ?,
+            protein_goal = ?
+        WHERE id = 1`,
+        calorieGoal,
+        proteinGoal
+    );
+}
+
+

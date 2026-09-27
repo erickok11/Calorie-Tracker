@@ -16,11 +16,12 @@ import {
   calculateTotalProtein
 } from "@/utils/nutrition";
 
-
+import {
+  useGoal,
+} from "@/context/GoalsContext";
 
 export default function HomeScreen() {
-  const calorieGoal = 1800;
-  const proteinGoal = 140;
+  const {calorieGoal, proteinGoal} = useGoal();
 
   const { foods } = useFood();
 
