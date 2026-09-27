@@ -9,6 +9,8 @@ import {
   View,
 } from "react-native";
 
+import ProgressCircle from "@/components/ProgressCircle";
+
 
 
 export default function HomeScreen() {
@@ -37,36 +39,28 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.greeting}>Good morning</Text>
+        <Text style={styles.greeting}>Hello</Text>
         <Text style={styles.date}>Today</Text>
 
-        <View style={styles.calorieCard}>
-          <Text style={styles.bigNumber}>{totalCalories}</Text>
-          <Text style={styles.label}>kcal eaten</Text>
+        <View style={styles.goalsRow}>
+          <View style={styles.goalCard}>
+            <Text style={styles.goalLabel}>CALORIES</Text>
 
-          <View style={styles.divider} />
+            <ProgressCircle value={totalCalories} goal={calorieGoal} />
 
-          <Text style={styles.remaining}>
-            {caloriesRemaining} kcal remaining
-          </Text>
-        </View>
-
-        <View style={styles.proteinCard}>
-          <View style={styles.row}>
-            <Text style={styles.sectionTitle}>Protein</Text>
-
-            <Text style={styles.proteinNumber}>
-              {totalProtein} / {proteinGoal}g
+            <Text style={styles.remainingText}>
+              {Math.max(calorieGoal - totalCalories, 0)} kcal remaining
             </Text>
           </View>
 
-          <View style={styles.progressBackground}>
-            <View
-              style={[
-                styles.progressFill,
-                { width: `${proteinProgress}%` },
-              ]}
-            />
+          <View style={styles.goalCard}>
+            <Text style={styles.goalLabel}>PROTEIN</Text>
+
+            <ProgressCircle value={totalProtein} goal={proteinGoal} unit="g" />
+
+            <Text style={styles.remainingText}>
+              {Math.max(proteinGoal-totalProtein, 0)}g remaining
+            </Text>
           </View>
         </View>
 
@@ -182,17 +176,17 @@ const styles = StyleSheet.create({
   },
 
   progressBackground: {
-    height: 12,
+    height: 7,
     backgroundColor: "#E8E8E8",
-    borderRadius: 20,
-    marginTop: 15,
+    borderRadius: 10,
+    marginTop: 18,
     overflow: "hidden",
   },
 
   progressFill: {
     height: "100%",
     backgroundColor: "#3478F6",
-    borderRadius: 20,
+    borderRadius: 10,
   },
 
   foodTitle: {
@@ -239,5 +233,45 @@ const styles = StyleSheet.create({
   chevron: {
     fontSize: 28,
     color: "#AAA",
+  },
+
+  goalsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 30,
+  },
+
+  goalCard: {
+    flex: 1,
+    backgroundColor: "white",
+    borderRadius: 20,
+    paddingVertical: 18,
+    alignItems: "center"
+  },
+
+  goalLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#777",
+    letterSpacing: 0.8,
+    marginBottom: 15,
+  },
+
+  goalValue: {
+    fontSize: 32,
+    fontWeight: "700",
+    marginTop: 12,
+  },
+
+  goalTarget: {
+    fontSize: 14,
+    color: "#777",
+    marginTop: 2,
+  },
+
+  remainingText: {
+    fontSize: 12,
+    color: "#777",
+    marginTop: 12,
   },
 });
