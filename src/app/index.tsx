@@ -11,6 +11,11 @@ import {
 
 import ProgressCircle from "@/components/ProgressCircle";
 
+import {
+  calculateTotalCalories,
+  calculateTotalProtein
+} from "@/utils/nutrition";
+
 
 
 export default function HomeScreen() {
@@ -19,22 +24,9 @@ export default function HomeScreen() {
 
   const { foods } = useFood();
 
-  const totalCalories = foods.reduce(
-    (sum, food) => sum + food.calories,
-    0
-  );
+  const totalCalories = calculateTotalCalories(foods);
+  const totalProtein = calculateTotalProtein(foods);
 
-  const totalProtein = foods.reduce(
-    (sum, food) => sum + food.protein,
-    0
-  );
-
-  const caloriesRemaining = calorieGoal - totalCalories;
-
-  const proteinProgress = Math.min(
-    (totalProtein / proteinGoal) * 100,
-    100
-  );
 
   return (
     <SafeAreaView style={styles.container}>

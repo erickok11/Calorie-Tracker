@@ -1,3 +1,4 @@
+import { calculateProgress } from "@/utils/nutrition";
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 
@@ -18,7 +19,7 @@ export default function ProgressCircle({
     const radius = (size - strokeWidth) /2;
     const circumference = 2 * Math.PI * radius;
 
-    const progress = Math.min(value / goal, 1);
+    const progress = calculateProgress(value, goal);
 
     const strokeDashoffset = circumference * (1 - progress);
 
