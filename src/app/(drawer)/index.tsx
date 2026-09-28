@@ -20,6 +20,9 @@ import {
   useGoal,
 } from "@/context/GoalsContext";
 
+import { useNavigation } from "expo-router";
+import { DrawerActions } from "expo-router/react-navigation";
+
 export default function HomeScreen() {
   const {calorieGoal, proteinGoal} = useGoal();
 
@@ -28,12 +31,36 @@ export default function HomeScreen() {
   const totalCalories = calculateTotalCalories(foods);
   const totalProtein = calculateTotalProtein(foods);
 
+  const navigation = useNavigation();
+
+  const today = new Date();
+
+  const formattedDate = today.toLocaleDateString("en-US",{
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.greeting}>Hello</Text>
-        <Text style={styles.date}>Today</Text>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => 
+              navigation.dispatch(DrawerActions.openDrawer())
+            }
+          >
+            <Text style={styles.menuIcon}>☰</Text>
+          </TouchableOpacity>
+
+          <View style={styles.headerText}>
+            <Text style={styles.title}>Today</Text>
+            <Text style={styles.date}>{formattedDate}</Text>
+          </View>
+
+          <View style={styles.headerSpacer} />
+        </View>
 
         <View style={styles.goalsRow}>
           <View style={styles.goalCard}>
@@ -107,13 +134,6 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "700",
     marginTop: 15,
-  },
-
-  date: {
-    fontSize: 17,
-    color: "#777",
-    marginTop: 4,
-    marginBottom: 25,
   },
 
   calorieCard: {
@@ -267,4 +287,43 @@ const styles = StyleSheet.create({
     color: "#777",
     marginTop: 12,
   },
+
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 25,
+  },
+
+  menuButton: {
+    width: 44,
+    height: 44,
+    justifyContent: "center",
+    alignItems: "flex-start",
+  },
+
+  menuIcon: {
+    fontSize: 25,
+    fontWeight: "600",
+  },
+
+  headerText: {
+    flex: 1,
+    alignItems: "center",
+  },
+
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+  },
+
+  date: {
+    fontSize: 14,
+    color: "#777",
+    marginTop: 2,
+  },
+
+  headerSpacer: {
+    width: 44,
+  },
+
 });
