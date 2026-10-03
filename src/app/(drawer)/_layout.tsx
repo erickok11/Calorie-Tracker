@@ -29,6 +29,14 @@ export default function DrawerLayout() {
             />
 
             <Drawer.Screen
+                name = "history"
+                options={{
+                    drawerLabel: "History",
+                    title: "History"
+                }}
+            />
+
+            <Drawer.Screen
                 name = "settings"
                 options={{
                     drawerLabel: "Settings",

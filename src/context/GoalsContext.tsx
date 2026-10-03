@@ -1,4 +1,9 @@
-import { getSettings, updateGoal as updateGoalInDatabase } from "@/database/database";
+import {
+    ensureDailyGoals,
+    getSettings,
+    updateDailyGoals,
+    updateGoal as updateGoalInDatabase,
+} from "@/database/database";
 
 import {
     createContext,
@@ -7,6 +12,10 @@ import {
     useEffect,
     useState,
 } from "react";
+
+import {
+    formatDateForDatabase
+} from "@/utils/date";
 
 type GoalsContextType = {
     calorieGoal: number;
@@ -40,7 +49,19 @@ export function GoalsProvider({
         if(settings) {
             setCalorieGoal(settings.calorie_goal);
             setProteinGoal(settings.protein_goal);
+
+            const today = formatDateForDatabase(
+                new Date()
+            );
+
+            await ensureDailyGoals(
+                today,
+                settings.calorie_goal,
+                settings.protein_goal
+            );
+
         }
+
     };
 
     const updateGoal = async(
@@ -52,6 +73,15 @@ export function GoalsProvider({
             newProteinGoal
         );
 
+        const today = formatDateForDatabase (
+            new Date()
+        );
+
+        await updateDailyGoals(
+            today,
+            newCalorieGoal,
+            newProteinGoal
+        )
         setCalorieGoal(newCalorieGoal);
         setProteinGoal(newProteinGoal);
     };

@@ -18,6 +18,20 @@ export type settingsRow = {
     protein_goal: number;
 };
 
+export type DailySummaryRow = {
+    date: string;
+    total_calories: number;
+    total_protein: number;
+    calorie_goal: number;
+    protein_goal: number;
+}
+
+export type DailyGoal = {
+    date: string;
+    calorie_goal: number;
+    protein_goal: number;
+}
+
 export function getLocalDate(){
     const now = new Date();
 
@@ -46,6 +60,12 @@ export async function initializeDatabase() {
         
         CREATE TABLE IF NOT EXISTS settings (
             id INTEGER PRIMARY KEY NOT NULL,
+            calorie_goal REAL NOT NULL,
+            protein_goal REAL NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS daily_goals (
+            date TEXT PRIMARY KEY NOT NULL,
             calorie_goal REAL NOT NULL,
             protein_goal REAL NOT NULL
         );
@@ -169,5 +189,71 @@ export async function updateGoal(
         WHERE id = 1`,
         calorieGoal,
         proteinGoal
+    );
+}
+
+export async function getDailySummaries() {
+    const database = await getDatabase();
+
+    return await database.getAllAsync<DailySummaryRow>(
+        `SELECT
+            foods.date,
+            SUM(calories) AS total_calories,
+            SUM(protein) AS total_protein,
+            daily_goals.calorie_goal,
+            daily_goals.protein_goal,
+        FROM foods
+        JOIN daily_goals
+            ON foods.date = daily_goals.date
+        GROUP BY foods.date
+        ORDER BY foods.date DESC`
+    );
+}
+
+export async function getDailyGoals(date: string) {
+    const database = await getDatabase();
+
+    return await database.getFirstAsync<DailyGoal>(
+        `SELECT *
+         FROM daily_goals
+         WHERE date = ?`,
+        date
+    );
+}
+
+export async function ensureDailyGoals(
+    date:string,
+    calorieGoal: number,
+    proteinGoal: number
+){
+    const database = await getDatabase();
+
+    await database.runAsync(
+        `INSERT OR IGNORE INTO daily_goals
+        (date, calorie_goal, protein_goal)
+        VALUES (?, ?, ?)`,
+        date,
+        calorieGoal,
+        proteinGoal
+    );
+}
+
+export async function updateDailyGoals(
+    date:string,
+    calorieGoal: number,
+    proteinGoal: number,
+){
+    const database = await getDatabase();
+
+    await database.runAsync(
+        `INSERT INTO daily_goals
+        (date, calorie_goal, protein_goal)
+        VALUES (?, ?, ?)
+        ON CONFLICT(date) DO UPDATE SET
+            calorie_goal = excluded.calorie_goal
+            protein_goal = excluded.protein_goal`,
+        date,
+        calorieGoal,
+        proteinGoal,
     );
 }
