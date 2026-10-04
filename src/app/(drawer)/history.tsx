@@ -172,6 +172,13 @@ export default function HistoryScreen() {
                             new Date(year, month, day)
                         );
 
+
+                        const cellDate = new Date(year, month, day);
+                        const today = new Date();
+
+                        cellDate.setHours(0,0,0,0);
+                        const isFuture = cellDate > today;
+
                         return (
                             <TouchableOpacity
                                 key={date}
@@ -184,17 +191,17 @@ export default function HistoryScreen() {
                                         status={status}
                                         selected={selectedDate === date}
                                     />
-                                ) : (
-                                    <View 
-                                        style={[
-                                            styles.emptyDay,
-                                            selectedDate === date && styles.selectedEmptyDay,
-                                        ]}
-                                    >
+                                ) : isFuture ? (
+                                    <View style={styles.emptyDay}>
                                         <Text style={styles.dayNumber}>
                                             {day}
                                         </Text>
                                     </View>
+                                ) : (
+                                    <DayRing
+                                        day={day}
+                                        selected={selectedDate===date}
+                                    />
                                 )}
                             </TouchableOpacity>
                         );
