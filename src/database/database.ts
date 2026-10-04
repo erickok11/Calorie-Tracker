@@ -198,10 +198,10 @@ export async function getDailySummaries() {
     return await database.getAllAsync<DailySummaryRow>(
         `SELECT
             foods.date,
-            SUM(calories) AS total_calories,
-            SUM(protein) AS total_protein,
+            SUM(foods.calories) AS total_calories,
+            SUM(foods.protein) AS total_protein,
             daily_goals.calorie_goal,
-            daily_goals.protein_goal,
+            daily_goals.protein_goal
         FROM foods
         JOIN daily_goals
             ON foods.date = daily_goals.date
@@ -257,3 +257,5 @@ export async function updateDailyGoals(
         proteinGoal,
     );
 }
+
+
