@@ -72,7 +72,7 @@ export default function HistoryScreen() {
 
     const numberOfDays = new Date(
         year,
-        month,
+        month + 1,
         0
     ).getDate();
 
