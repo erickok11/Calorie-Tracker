@@ -17,18 +17,11 @@ export default function TabLayout() {
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <AnimatedSplashOverlay />
           <GoalsProvider>
-            <Stack>
-              <Stack.Screen
-                name="index"
-                options={{ headerShown: false}}
-              />
-              <Stack.Screen
-                name="add-food"
-                options={{
-                  headerShown: false,
-                  presentation: "modal"
-                }}
-              />
+            <Stack
+              screenOptions={{
+                headerShown: false,
+              }}  
+            >
             </Stack>
           </GoalsProvider>
       </ThemeProvider>
