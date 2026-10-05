@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import {
     SafeAreaView,
@@ -9,15 +9,17 @@ import {
     View,
 } from "react-native";
 
-import { useNavigation } from "expo-router";
+import { useFocusEffect, useNavigation } from "expo-router";
 import { DrawerActions } from "expo-router/react-navigation";
 
 import { DailySummaryRow, getDailySummaries } from "@/database/database";
 
-import { formatDateForDatabase } from "@/utils/date";
+import { formatDateForDatabase, getDaysInMonth } from "@/utils/date";
 import { getGoalStatus } from "@/utils/goals";
 
 import Svg, { Circle } from "react-native-svg";
+
+import ProgressCircle from "@/components/ProgressCircle";
 
 export default function HistoryScreen() {
     const navigation = useNavigation();
@@ -28,13 +30,15 @@ export default function HistoryScreen() {
         new Date()
     );
 
-    const [selectedDate, setSelectedDate] = useState<string | null>(
-        null
+    const [selectedDate, setSelectedDate] = useState<string>(
+        formatDateForDatabase(new Date())
     );
 
-    useEffect(() => {
-        loadHistory();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            loadHistory();
+        }, [])
+    );
 
     const loadHistory = async () => {
         const results = await getDailySummaries();
@@ -70,11 +74,7 @@ export default function HistoryScreen() {
         1
     ).getDay();
 
-    const numberOfDays = new Date(
-        year,
-        month + 1,
-        0
-    ).getDate();
+    const numberOfDays = getDaysInMonth(year, month);
 
     const calendarDays: (number | null)[] = [];
 
@@ -95,6 +95,10 @@ export default function HistoryScreen() {
             (summary) => summary.date === date
         );
     };
+
+    const isCurrentMonth =
+        currentMonth.getFullYear() === new Date().getFullYear() &&
+        currentMonth.getMonth() === new Date().getMonth();
 
     return (
         <SafeAreaView style={styles.container}>
@@ -128,8 +132,14 @@ export default function HistoryScreen() {
                         })}
                     </Text>
 
-                    <TouchableOpacity onPress={goToNextMonth}>
-                        <Text style={styles.monthArrow}>›</Text>
+                    <TouchableOpacity 
+                        onPress={goToNextMonth}
+                        disabled={isCurrentMonth}
+                    >
+                        <Text style={[
+                            styles.monthArrow,
+                            isCurrentMonth && styles.disabledArrow,
+                        ]}>›</Text>
                     </TouchableOpacity>
                 </View>
                 
@@ -208,6 +218,7 @@ export default function HistoryScreen() {
                     })}
                 </View>
 
+
                 {selectedDate && (()=> {
                     const summary = days.find(
                         (day) => day.date === selectedDate
@@ -227,24 +238,27 @@ export default function HistoryScreen() {
 
                             {summary ? (
                                 <View style={styles.summaryRow}>
-                                    <View>
-                                        <Text style={styles.summaryLabel}>
-                                            Calories
+                                    <View style={styles.summaryGoal}>
+                                        <Text style={styles.summaryTitle}>
+                                            CALORIES
                                         </Text>
 
-                                        <Text style={styles.summaryValue}>
-                                            {summary.total_calories} / {summary.calorie_goal}
-                                        </Text>
+                                        <ProgressCircle
+                                            value={summary.total_calories}
+                                            goal={summary.calorie_goal}
+                                        />
                                     </View>
 
-                                    <View>
-                                        <Text style={styles.summaryLabel}>
-                                            Protein
+                                    <View style={styles.summaryGoal}>
+                                        <Text style={styles.summaryTitle}>
+                                            PROTEIN
                                         </Text>
 
-                                        <Text style={styles.summaryValue}>
-                                            {summary.total_protein} / {summary.protein_goal}g    
-                                        </Text>
+                                        <ProgressCircle
+                                            value={summary.total_protein}
+                                            goal={summary.protein_goal}
+                                            unit="g"
+                                        />
                                     </View>
                                 </View>
                             ):(
@@ -255,9 +269,6 @@ export default function HistoryScreen() {
                         </View>
                     );
                 })()}
-                
-
-
             </ScrollView>
         </SafeAreaView>
     )
@@ -437,6 +448,20 @@ const styles = StyleSheet.create({
     summaryRow: {
         flexDirection: "row",
         justifyContent: "space-between",
+        alignItems: "center",
+    },
+
+    summaryGoal: {
+        flex:1,
+        alignItems: "center",
+    },
+
+    summaryTitle: {
+        fontSize: 12,
+        fontWeight: "700",
+        color: "#777",
+        marginBottom: 12,
+        letterSpacing: 0.5,
     },
 
     summaryLabel:{
@@ -476,5 +501,9 @@ const styles = StyleSheet.create({
     selectedDay: {
         backgroundColor: "#E5E5EA",
         borderRadius: 21,
+    },
+
+    disabledArrow: {
+        opacity: 0.25,
     },
 });

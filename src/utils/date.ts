@@ -11,3 +11,10 @@ export function formatDateForDatabase(date: Date) {
 
     return `${year}-${month}-${day}`;
 }
+
+export function getDaysInMonth(
+    year: number,
+    month: number
+){
+    return new Date(year, month+1, 0).getDate();
+}

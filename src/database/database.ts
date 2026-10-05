@@ -250,11 +250,11 @@ export async function updateDailyGoals(
         (date, calorie_goal, protein_goal)
         VALUES (?, ?, ?)
         ON CONFLICT(date) DO UPDATE SET
-            calorie_goal = excluded.calorie_goal
+            calorie_goal = excluded.calorie_goal,
             protein_goal = excluded.protein_goal`,
         date,
         calorieGoal,
-        proteinGoal,
+        proteinGoal
     );
 }
 
