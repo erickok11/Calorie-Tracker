@@ -15,14 +15,17 @@ import {
 import { useFood } from "@/context/FoodContext";
 import { router } from "expo-router";
 
+import { FOOD_UNITS, FoodUnit } from "@/constants/unit";
+
 export default function AddFoodScreen() {
     const { addFood } = useFood();
 
     const [name, setName] = useState("");
     const [amount, setAmount] = useState("");
-    const [unit, setUnit] = useState("lb");
+    const [unit, setUnit] = useState<FoodUnit | undefined> (undefined);
     const [calories, setCalories] = useState("");
     const [protein, setProtein] = useState("");
+    const [showUnits, setShowUnits] = useState(false);
 
     const handleAddFood =  async () => {
         const amountNumber = amount.trim() === "" ? undefined : Number(amount);
@@ -53,7 +56,7 @@ export default function AddFoodScreen() {
         await addFood({
             name: name.trim(),
             amount: amountNumber,
-            unit: amountNumber === undefined ? undefined : unit,
+            unit,
             calories: calorieNumber,
             protein: proteinNumber,
         });
@@ -97,18 +100,68 @@ export default function AddFoodScreen() {
                             keyboardType="decimal-pad"
                         />
 
-                        <TouchableOpacity
-                            style={styles.unitButton}
-                            onPress={() =>
-                                setUnit((current) =>
-                                    current === "lb" ? "serving" : "lb"
-                                )
-                            }
-                        >
-                            <Text style={styles.unitText}>{unit}</Text>
-                        </TouchableOpacity>
+                        
                     </View>
+                    <View style={styles.unitSection}>
+                            <Text style={styles.label}>Unit(Optional)</Text>
 
+                            <TouchableOpacity
+                                style={styles.unitSelector}
+                                onPress={() => setShowUnits(!showUnits)}
+                            >
+                                <Text
+                                    style={[
+                                        styles.unitSelectorText,
+                                        !unit && styles.placeholderText,
+                                    ]}
+                                >
+                                    {unit ?? "Select unit"}
+                                </Text>
+
+                                <Text style={styles.chevron}>
+                                    {showUnits ? "^" : "⌄"}
+                                </Text>
+                            </TouchableOpacity>
+
+                            {showUnits && (
+                                <View style={styles.unitOptions}>
+                                    <TouchableOpacity
+                                        style={styles.unitOption}
+                                        onPress={() => {
+                                            setUnit(undefined);
+                                            setShowUnits(false);
+                                        }}
+                                    >
+                                        <Text style={styles.unitOptionText}>
+                                            None
+                                        </Text>
+                                    </TouchableOpacity>
+                                    {FOOD_UNITS.map((option) => (
+                                        <TouchableOpacity
+                                            key={option}
+                                            style={[
+                                                styles.unitOption,
+                                                unit === option && styles.selectedUnitOption,
+                                            ]}
+                                            onPress={() => {
+                                                setUnit(option);
+                                                setShowUnits(false);
+                                            }}
+                                        >
+                                            <Text
+                                                style={[
+                                                    styles.unitOptionText,
+                                                    unit === option &&
+                                                        styles.selectedUnitOptionText,
+                                                ]}
+                                            >
+                                                {option}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
+                        </View>
                     <Text style={styles.label}>Calories</Text>
                     <View style={styles.numberContainer}>
                         <TextInput 
@@ -242,6 +295,61 @@ const styles = StyleSheet.create({
     addButtonText: {
         color: "white",
         fontSize: 17,
+        fontWeight: "600",
+    },
+
+    unitSection: {
+        marginTop: 16,
+    },
+
+    unitSelector: {
+        backgroundColor: "white",
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 15,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
+
+    unitSelectorText: {
+        fontSize: 16,
+        color: "#000",
+    },
+
+    placeholderText: {
+        color: "#9999"
+    },
+
+    chevron: {
+        fontSize: 18,
+        color: "#777",
+    },
+
+    unitOptions: {
+        backgroundColor: "white",
+        borderRadius: 12,
+        marginTop: 6,
+        overflow: "hidden",
+    },
+
+    unitOption: {
+        paddingHorizontal: 16,
+        paddingVertical: 13,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: "#E5E5EA",
+    },
+
+    selectedUnitOption: {
+        backgroundColor: "#F0F6FF",
+    },
+
+    unitOptionText: {
+        fontSize: 16,
+    },
+
+    selectedUnitOptionText:{
+        color: "#3478F6",
         fontWeight: "600",
     },
 });
