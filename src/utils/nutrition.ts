@@ -3,6 +3,11 @@ export type NutritionFood = {
     protein: number;
 };
 
+export type NutritionResult = {
+    calories: number;
+    protein: number;
+};
+
 export function calculateTotalCalories(
     foods: NutritionFood[]
 ) {
@@ -28,4 +33,25 @@ export function calculateProgress(
     }
 
     return Math.min(value/goal, 1);
+}
+
+export function calculateNutrition(
+    servingAmount: number,
+    servingCalories: number,
+    servingProtein: number,
+    consumedAmount: number
+): NutritionResult {
+    if (servingAmount <= 0) {
+        return {
+            calories: 0,
+            protein: 0
+        };
+    }
+
+    const multiplier = consumedAmount / servingAmount;
+
+    return {
+        calories: servingCalories * multiplier,
+        protein: servingProtein * multiplier,
+    };
 }

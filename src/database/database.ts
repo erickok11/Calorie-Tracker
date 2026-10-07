@@ -1,3 +1,4 @@
+import { FoodUnit } from "@/constants/unit";
 import * as SQLite from "expo-sqlite";
 
 let db: SQLite.SQLiteDatabase | null = null;
@@ -30,6 +31,15 @@ export type DailyGoal = {
     date: string;
     calorie_goal: number;
     protein_goal: number;
+}
+
+export type SavedFoodRow = {
+    id: number;
+    name: string;
+    serving_amount: number;
+    serving_unit: FoodUnit;
+    calories: number;
+    protein: number;
 }
 
 export function getLocalDate(){
@@ -69,7 +79,17 @@ export async function initializeDatabase() {
             calorie_goal REAL NOT NULL,
             protein_goal REAL NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS saved_foods (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            serving_amount REAL NOT NULL,
+            serving_unit TEXT NOT NULL,
+            calories REAL NOT NULL,
+            protein REAL NOT NULL
+        )
         `
+
     );
 
     await db.runAsync(
@@ -258,4 +278,76 @@ export async function updateDailyGoals(
     );
 }
 
+export async function getSavedFood() {
+    const database = await getDatabase();
+
+    return await database.getAllAsync<SavedFoodRow>(
+        `SELECT
+         id,
+         name,
+         serving_amount,
+         serving_unit,
+         calories,
+         protein
+        FROM saved_foods
+        ORDER BY name ASC`
+    );
+}
+
+export async function createSavedFood(
+    name: string,
+    servingAmount: number,
+    servingUnit: string,
+    calories: number,
+    protein: number
+){
+    const database = await getDatabase();
+
+    const result = await database.runAsync(
+        `INSERT INTO saved_foods (
+         name,
+         serving_amount,
+         serving_unit,
+         calories,
+         protein
+        )
+        VALUES(?, ?, ?, ?, ?)`,
+        name,
+        servingAmount,
+        servingUnit,
+        calories,
+        protein
+    );
+
+    return result.lastInsertRowId;
+}
+
+export async function deleteSavedFood(id: number) {
+    const database = await getDatabase();
+
+    await database.runAsync(
+        `DELETE FROM saved_foods
+        WHERE id = ?`,
+        id
+    );
+}
+
+export async function getSavedFoodById(id: number) {
+    const database= await getDatabase();
+
+    const food = await database.getFirstAsync<SavedFoodRow>(
+        `SELECT
+         id,
+         name,
+         serving_amount,
+         serving_unit,
+         calories,
+         protein
+        FROM saved_foods
+        WHERE id = ?`,
+        id
+    );
+
+    return food;
+}
 

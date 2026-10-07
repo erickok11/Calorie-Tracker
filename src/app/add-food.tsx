@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Alert,
     Keyboard,
@@ -6,6 +6,7 @@ import {
     SafeAreaView,
     ScrollView,
     StyleSheet,
+    Switch,
     Text,
     TextInput,
     TouchableOpacity,
@@ -19,6 +20,12 @@ import { FoodUnit } from "@/constants/unit";
 
 import UnitPicker from "@/components/UnitPicker";
 
+import {
+    createSavedFood,
+    getSavedFood,
+    SavedFoodRow,
+} from "@/database/database";
+
 export default function AddFoodScreen() {
     const { addFood } = useFood();
 
@@ -27,6 +34,17 @@ export default function AddFoodScreen() {
     const [unit, setUnit] = useState<FoodUnit | undefined> (undefined);
     const [calories, setCalories] = useState("");
     const [protein, setProtein] = useState("");
+    const [savedFoods, setSavedFoods] = useState<SavedFoodRow[]>([]);
+    const [saveForLater, setSaveForLater ] = useState(false);
+
+    useEffect(() => {
+        const loadSavedFoods = async () => {
+            const foods = await getSavedFood();
+            setSavedFoods(foods);
+        };
+
+        loadSavedFoods();
+    }, []);
 
     const handleAddFood =  async () => {
         const amountNumber = amount.trim() === "" ? undefined : Number(amount);
@@ -52,6 +70,24 @@ export default function AddFoodScreen() {
         ) {
             Alert.alert("Invalid values", "Please enter valid numbers.");
             return;
+        }
+
+        if (saveForLater) {
+            if (!amount || ! unit) {
+                Alert.alert(
+                    "Serving required",
+                    "Saved foods need an amount and unit."
+                );
+                return;
+            }
+
+            await createSavedFood(
+                name.trim(),
+                Number(amount),
+                unit!,
+                Number(calories),
+                Number(protein)
+            );
         }
 
         await addFood({
@@ -81,6 +117,16 @@ export default function AddFoodScreen() {
 
                         <View style={styles.headerSpacer} />
                     </View>
+                    <TouchableOpacity
+                        style={styles.savedFoodsButton}
+                        onPress={() => router.push("/saved-foods")}
+                    >
+                        <Text style={styles.savedFoodsButtonText}>
+                            Saved Foods
+                        </Text>
+
+                        <Text style={styles.chevron}>›</Text>
+                    </TouchableOpacity>
 
                     <Text style={styles.label}>Food name</Text>
                     <TextInput
@@ -133,6 +179,22 @@ export default function AddFoodScreen() {
                             keyboardType="decimal-pad"
                         />
                         <Text style={styles.suffix}>g</Text>
+                    </View>
+
+                    <View style={styles.saveFoodRow}>
+                        <View>
+                            <Text style={styles.saveFoodTitle}>
+                                Save this food
+                            </Text>
+
+                            <Text style={styles.saveFoodSubtitle}>
+                                Add it to your saved foods
+                            </Text>
+                        </View>
+                        <Switch
+                            value={saveForLater}
+                            onValueChange={setSaveForLater}
+                        />
                     </View>
 
                     <TouchableOpacity
@@ -299,6 +361,76 @@ const styles = StyleSheet.create({
 
     selectedUnitOptionText:{
         color: "#3478F6",
+        fontWeight: "600",
+    },
+
+    savedSection: {
+        marginBottom: 20,
+    },
+
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: "600",
+        marginBottom: 10,
+    },
+
+    savedFood: {
+        backgroundColor: "white",
+        borderRadius: 12,
+        padding: 14,
+        marginBottom: 8,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
+
+    savedFoodName: {
+        fontSize: 16,
+        fontWeight: "600",
+    },
+
+    savedFoodDetails: {
+        fontSize: 14,
+        color: "#777",
+        marginTop: 3,
+    },
+
+    savedFoodNutrition: {
+        fontSize: 14,
+        color: "#555",
+    },
+
+    saveFoodRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginTop: 20,
+        marginBottom: 20,
+    },
+
+    saveFoodTitle: {
+        fontSize: 16,
+        fontWeight: "600",
+    },
+
+    saveFoodSubtitle: {
+        fontSize: 13,
+        color: "#777",
+        marginTop: 2,
+    },
+
+    savedFoodsButton: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        backgroundColor: "white",
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 20,
+    },
+
+    savedFoodsButtonText: {
+        fontSize: 16,
         fontWeight: "600",
     },
 });
