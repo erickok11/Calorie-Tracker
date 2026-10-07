@@ -3,11 +3,12 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
     SafeAreaView,
+    ScrollView,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
-    ScrollView,
 } from "react-native";
 
 
@@ -21,6 +22,11 @@ export default function SavedFoodsScreen() {
         const foods = await getSavedFood();
         setSavedFoods(foods);
     };
+
+    const [search, setSearch] = useState("");
+
+    const filteredFoods = savedFoods.filter((food) => 
+        food.name.toLowerCase().includes(search.trim().toLowerCase()));
 
     useFocusEffect(
         useCallback(() => {
@@ -43,6 +49,14 @@ export default function SavedFoodsScreen() {
             <ScrollView
                 contentContainerStyle={styles.content}
             >
+                <TextInput
+                    style={styles.searchInput}
+                    value={search}
+                    onChangeText={setSearch}
+                    placeholder="Search saved foods"
+                    clearButtonMode="while-editing"
+                />
+
                 {savedFoods.length === 0 ? (
                     <View style={styles.emptyContainer}>
                         <Text style={styles.emptyTitle}>
@@ -53,8 +67,18 @@ export default function SavedFoodsScreen() {
                             Foods you save will appear here.
                         </Text>
                     </View>
-                ): (
-                    savedFoods.map((food) => (
+                ): filteredFoods.length === 0 ?(
+                    <View style={styles.emptyContainer}>
+                        <Text style={styles.emptyTitle}>
+                            No Results
+                        </Text>
+
+                        <Text style={styles.emptyText}>
+                            No saved foods match "{search}".
+                        </Text>
+                    </View>
+                ) : (
+                    filteredFoods.map((food) => (
                         <TouchableOpacity
                             key={food.id}
                             style={styles.foodCard}
@@ -176,4 +200,12 @@ const styles = StyleSheet.create({
         marginTop: 3,
     },
     
+    searchInput: {
+        backgroundColor: "white",
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        fontSize: 16,
+        marginBottom: 16,
+    },
 });

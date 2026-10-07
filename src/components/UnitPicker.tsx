@@ -14,11 +14,15 @@ import {
 type UnitPickerProps = {
     value: FoodUnit | undefined;
     onChange: (unit: FoodUnit | undefined) => void;
+    units?: readonly FoodUnit[];
+    allowNone?: boolean;
 };
 
 export default function UnitPicker({
     value,
     onChange,
+    units = FOOD_UNITS,
+    allowNone = true,
 }: UnitPickerProps) {
     const [showUnits, setShowUnits] = useState(false);
 
@@ -44,19 +48,21 @@ export default function UnitPicker({
 
             {showUnits && (
                 <View style={styles.options}>
-                    <TouchableOpacity
-                        style={styles.option}
-                        onPress={() => {
-                            onChange(undefined);
-                            setShowUnits(false);
-                        }}
-                    >
-                        <Text style={styles.optionText}>
-                            None
-                        </Text>
-                    </TouchableOpacity>
-
-                    {FOOD_UNITS.map((unit) => (
+                    {allowNone && (
+                        <TouchableOpacity
+                            style={styles.option}
+                            onPress={() => {
+                                onChange(undefined);
+                                setShowUnits(false);
+                            }}
+                        >
+                            <Text style={styles.optionText}>
+                                None
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+                    
+                    {units.map((unit) => (
                         <TouchableOpacity
                             key={unit}
                             style={[

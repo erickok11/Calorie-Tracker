@@ -29,6 +29,14 @@ import {
 
 import { useFood } from "@/context/FoodContext";
 
+import UnitPicker from "@/components/UnitPicker";
+
+import { FoodUnit } from "@/constants/unit";
+import {
+    convertAmount,
+    getCompatibleUnits,
+} from "@/utils/units";
+
 export default function LogSavedFoodScreen() {
     const router = useRouter();
 
@@ -42,6 +50,8 @@ export default function LogSavedFoodScreen() {
 
     const { addFood } = useFood();
 
+    const [selectedUnit, setSelectedUnit] = useState<FoodUnit | undefined>(undefined);
+
     useEffect(() => {
         const loadFood = async () => {
             if (!id) {
@@ -51,6 +61,10 @@ export default function LogSavedFoodScreen() {
             const savedFood = await getSavedFoodById(Number(id));
 
             setFood(savedFood);
+
+            if (savedFood) {
+                setSelectedUnit(savedFood.serving_unit);
+            }
         };
         
         loadFood();
@@ -64,11 +78,17 @@ export default function LogSavedFoodScreen() {
         );
     }
 
+    const convertedAmount = selectedUnit
+                                ? convertAmount(Number(amount) || 0,
+                                                selectedUnit,
+                                                food.serving_unit
+                                            ) : null;
+                                
     const nutrition = calculateNutrition(
         food.serving_amount,
         food.calories,
         food.protein,
-        Number(amount) || 0
+        convertedAmount ?? 0
     );
 
     const handelAddToToday = async () => {
@@ -85,7 +105,7 @@ export default function LogSavedFoodScreen() {
         await addFood({
             name: food.name,
             amount: consumedAmount,
-            unit: food.serving_unit,
+            unit: selectedUnit,
             calories: nutrition.calories,
             protein: nutrition.protein,
         });
@@ -144,11 +164,18 @@ export default function LogSavedFoodScreen() {
                             inputAccessoryViewID="amountKeyboard"
                         />
 
-                        <Text style={styles.unit}>
-                            {food.serving_unit}
-                        </Text>
-                    </View>
+                        <View style={styles.unitPickerContainer}>
+                            <UnitPicker
+                                value={selectedUnit}
+                                onChange={setSelectedUnit}
+                                units={getCompatibleUnits(food.serving_unit)}
+                                allowNone={false}
+                            />
+                        </View>
+                        
 
+                    </View>
+                    
                     <View style={styles.resultCard}>
                         <Text style={styles.resultTitle}>
                             Nutrition
@@ -246,14 +273,20 @@ const styles = StyleSheet.create({
   amountRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 10,
   },
 
   input: {
     flex: 1,
     backgroundColor: "white",
     borderRadius: 12,
-    padding: 14,
+    paddingHorizontal:16,
+    paddingVertical: 15,
     fontSize: 18,
+  },
+
+  unitPickerContainer: {
+    width:100,
   },
 
   unit: {
