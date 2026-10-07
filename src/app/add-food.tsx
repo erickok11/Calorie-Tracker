@@ -15,7 +15,9 @@ import {
 import { useFood } from "@/context/FoodContext";
 import { router } from "expo-router";
 
-import { FOOD_UNITS, FoodUnit } from "@/constants/unit";
+import { FoodUnit } from "@/constants/unit";
+
+import UnitPicker from "@/components/UnitPicker";
 
 export default function AddFoodScreen() {
     const { addFood } = useFood();
@@ -25,7 +27,6 @@ export default function AddFoodScreen() {
     const [unit, setUnit] = useState<FoodUnit | undefined> (undefined);
     const [calories, setCalories] = useState("");
     const [protein, setProtein] = useState("");
-    const [showUnits, setShowUnits] = useState(false);
 
     const handleAddFood =  async () => {
         const amountNumber = amount.trim() === "" ? undefined : Number(amount);
@@ -105,63 +106,11 @@ export default function AddFoodScreen() {
                     <View style={styles.unitSection}>
                             <Text style={styles.label}>Unit(Optional)</Text>
 
-                            <TouchableOpacity
-                                style={styles.unitSelector}
-                                onPress={() => setShowUnits(!showUnits)}
-                            >
-                                <Text
-                                    style={[
-                                        styles.unitSelectorText,
-                                        !unit && styles.placeholderText,
-                                    ]}
-                                >
-                                    {unit ?? "Select unit"}
-                                </Text>
-
-                                <Text style={styles.chevron}>
-                                    {showUnits ? "^" : "⌄"}
-                                </Text>
-                            </TouchableOpacity>
-
-                            {showUnits && (
-                                <View style={styles.unitOptions}>
-                                    <TouchableOpacity
-                                        style={styles.unitOption}
-                                        onPress={() => {
-                                            setUnit(undefined);
-                                            setShowUnits(false);
-                                        }}
-                                    >
-                                        <Text style={styles.unitOptionText}>
-                                            None
-                                        </Text>
-                                    </TouchableOpacity>
-                                    {FOOD_UNITS.map((option) => (
-                                        <TouchableOpacity
-                                            key={option}
-                                            style={[
-                                                styles.unitOption,
-                                                unit === option && styles.selectedUnitOption,
-                                            ]}
-                                            onPress={() => {
-                                                setUnit(option);
-                                                setShowUnits(false);
-                                            }}
-                                        >
-                                            <Text
-                                                style={[
-                                                    styles.unitOptionText,
-                                                    unit === option &&
-                                                        styles.selectedUnitOptionText,
-                                                ]}
-                                            >
-                                                {option}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            )}
-                        </View>
+                            <UnitPicker
+                                value={unit}
+                                onChange={setUnit}
+                            />
+                    </View>
                     <Text style={styles.label}>Calories</Text>
                     <View style={styles.numberContainer}>
                         <TextInput 

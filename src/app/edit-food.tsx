@@ -15,7 +15,9 @@ import {
 import { useFood } from "@/context/FoodContext";
 import { router, useLocalSearchParams } from "expo-router";
 
-import { FOOD_UNITS, FoodUnit } from "@/constants/unit";
+import { FoodUnit } from "@/constants/unit";
+
+import UnitPicker from "@/components/UnitPicker";
 
 export default function EditFoodScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -35,8 +37,6 @@ export default function EditFoodScreen() {
     const [protein, setProtein] = useState(
         food?.protein.toString() ?? ""
     )
-
-    const [showUnits, setShowUnits] = useState(false);
 
     if (!food) {
         return (
@@ -134,63 +134,10 @@ export default function EditFoodScreen() {
                     <View style={styles.unitSection}>
                         <Text style={styles.label}>Unit(Optional)</Text>
 
-                        <TouchableOpacity
-                            style={styles.unitSelector}
-                            onPress={() => setShowUnits(!showUnits)}
-                        >
-                            <Text
-                                style={[
-                                    styles.unitSelectorText,
-                                    !unit && styles.placeholderText,
-                                ]}
-                            >
-                                {unit ?? "Select unit"}
-                            </Text>
-
-                            <Text style={styles.chevron}>
-                                {showUnits ? "^" : "⌄"}
-                            </Text>
-                        </TouchableOpacity>
-
-                        {showUnits && (
-                            <View style={styles.unitOptions}>
-                                <TouchableOpacity
-                                    style={styles.unitOption}
-                                    onPress={() => {
-                                        setUnit(undefined);
-                                        setShowUnits(false);
-                                    }}
-                                >
-                                    <Text style={styles.unitOptionText}>
-                                        None
-                                    </Text>
-                                </TouchableOpacity>
-
-                                {FOOD_UNITS.map((option) => (
-                                    <TouchableOpacity
-                                        key={option}
-                                        style={[
-                                            styles.unitOption,
-                                            unit === option && styles.selectedUnitOption,
-                                        ]}
-                                        onPress={() => {
-                                            setUnit(option);
-                                            setShowUnits(false);
-                                        }}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.unitOptionText,
-                                                unit === option &&
-                                                    styles.selectedUnitOptionText,
-                                            ]}
-                                        >
-                                            {option}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        )}
+                        <UnitPicker
+                            value={unit}
+                            onChange={setUnit}
+                        />
                     </View>
                     
                     <Text style={styles.label}>Calories</Text>
