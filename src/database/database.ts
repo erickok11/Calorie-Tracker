@@ -42,6 +42,15 @@ export type SavedFoodRow = {
     protein: number;
 }
 
+export type RecentFoodRow = {
+    id: number;
+    name: string;
+    amount: number | null;
+    unit: string | null;
+    calories: number;
+    protein: number;
+}
+
 export function getLocalDate(){
     const now = new Date();
 
@@ -51,6 +60,7 @@ export function getLocalDate(){
 
     return `${year}-${month}-${day}`;
 }
+
 export async function initializeDatabase() {
     db = await SQLite.openDatabaseAsync(
         "calorieTracker.db"
@@ -351,3 +361,41 @@ export async function getSavedFoodById(id: number) {
     return food;
 }
 
+export async function getRecentFoods() {
+    const database = await getDatabase();
+
+    return await database.getAllAsync<RecentFoodRow>(
+        `SELECT
+         f.id,
+         f.name,
+         f.amount,
+         f.unit,
+         f.calories,
+         f.protein
+        FROM foods f
+        WHERE f.id = (
+            SELECT MAX(f2.id)
+            FROM foods f2
+            WHERE LOWER(f2.name) = LOWER(f.name)
+        )
+        ORDER BY f.id DESC
+        LIMIT 20`
+    );
+}
+
+export async function getRecentFoodById(id:number) : Promise<RecentFoodRow | null> {
+    const database = await getDatabase();
+
+    return await database.getFirstAsync<RecentFoodRow>(
+        `SELECT
+         id,
+         name,
+         amount,
+         unit,
+         calories,
+         protein
+        FROM foods
+        WHERE id = ?`,
+        id
+    );
+}

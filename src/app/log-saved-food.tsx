@@ -3,7 +3,6 @@ import {
     Alert,
     InputAccessoryView,
     Keyboard,
-    SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
@@ -12,6 +11,8 @@ import {
     TouchableWithoutFeedback,
     View
 } from "react-native";
+
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
     useLocalSearchParams,
@@ -63,7 +64,7 @@ export default function LogSavedFoodScreen() {
             setFood(savedFood);
 
             if (savedFood) {
-                setSelectedUnit(savedFood.serving_unit);
+                setSelectedUnit(savedFood.serving_unit as FoodUnit);
             }
         };
         
@@ -91,10 +92,17 @@ export default function LogSavedFoodScreen() {
         convertedAmount ?? 0
     );
 
-    const handelAddToToday = async () => {
+    const canAdd = 
+        amount.trim() !== "" &&
+        Number.isFinite(Number(amount)) &&
+        Number(amount) > 0 &&
+        selectedUnit !== undefined &&
+        convertedAmount !== null;
+
+    const handleAddToToday = async () => {
         const consumedAmount = Number(amount);
 
-        if(!consumedAmount || consumedAmount <= 0) {
+        if(!amount.trim() || !Number.isFinite(consumedAmount) || consumedAmount <= 0) {
             Alert.alert(
                 "Invalid amount",
                 "Please enter an amount greater than 0."
@@ -102,15 +110,33 @@ export default function LogSavedFoodScreen() {
             return;
         }
 
-        await addFood({
-            name: food.name,
-            amount: consumedAmount,
-            unit: selectedUnit,
-            calories: nutrition.calories,
-            protein: nutrition.protein,
-        });
+        if (!selectedUnit || convertAmount === null) {
+            Alert.alert(
+                "Invalid unit",
+                "Please select a compatible unit."
+            )
+            return;
+        }
 
-        router.replace("/(drawer)");
+        try {
+            await addFood({
+                name: food.name,
+                amount: consumedAmount,
+                unit: selectedUnit,
+                calories: nutrition.calories,
+                protein: nutrition.protein,
+            });
+
+            router.replace("/(drawer)");
+        } catch (error) {
+            console.error("Failed to add saved food:", error);
+
+            Alert.alert(
+                "Error",
+                "Could not add the food. Please try again."
+            );
+        }
+        
     };
 
     return (
@@ -193,11 +219,10 @@ export default function LogSavedFoodScreen() {
                     <TouchableOpacity
                         style={[
                             styles.addButton,
-                            (!amount || Number(amount) <= 0) &&
-                                styles.addButtonDisabled,
+                            (!canAdd) && styles.addButtonDisabled,
                         ]}
-                        disabled={!amount || Number(amount) <= 0}
-                        onPress={handelAddToToday}
+                        disabled={!canAdd}
+                        onPress={handleAddToToday}
                     >
                         <Text style={styles.addButtonText}>
                             Add to Today
@@ -287,12 +312,6 @@ const styles = StyleSheet.create({
 
   unitPickerContainer: {
     width:100,
-  },
-
-  unit: {
-    fontSize: 18,
-    marginLeft: 12,
-    minWidth: 50,
   },
 
   resultCard: {

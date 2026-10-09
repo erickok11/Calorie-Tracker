@@ -1,13 +1,14 @@
 import { useFood } from "@/context/FoodContext";
 import { router } from "expo-router";
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import ProgressCircle from "@/components/ProgressCircle";
 

@@ -3,7 +3,6 @@ import {
     Alert,
     Keyboard,
     Pressable,
-    SafeAreaView,
     ScrollView,
     StyleSheet,
     Switch,
@@ -12,6 +11,8 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
+
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useFood } from "@/context/FoodContext";
 import { router } from "expo-router";
@@ -117,6 +118,18 @@ export default function AddFoodScreen() {
 
                         <View style={styles.headerSpacer} />
                     </View>
+
+                    <TouchableOpacity
+                        style={styles.savedFoodsButton}
+                        onPress={() => router.push("/recent-food")}
+                    >
+                        <Text style={styles.savedFoodsButtonText}>
+                            Recent Foods
+                        </Text>
+
+                        <Text style={styles.chevron}>›</Text>
+                    </TouchableOpacity>
+
                     <TouchableOpacity
                         style={styles.savedFoodsButton}
                         onPress={() => router.push("/saved-foods")}

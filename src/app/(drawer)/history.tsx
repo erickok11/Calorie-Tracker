@@ -1,13 +1,14 @@
 import { useCallback, useState } from "react";
 
 import {
-    SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
+
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useFocusEffect, useNavigation } from "expo-router";
 import { DrawerActions } from "expo-router/react-navigation";

@@ -1,11 +1,12 @@
 import {
     Alert,
-    SafeAreaView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
+
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useFood } from "@/context/FoodContext";
 import { router, useLocalSearchParams } from "expo-router";

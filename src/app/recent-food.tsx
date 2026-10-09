@@ -1,50 +1,53 @@
-import { getSavedFood, SavedFoodRow } from "@/database/database";
-import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useState, useCallback } from "react";
+
 import {
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import {
+    useFocusEffect,
+    useRouter,
+} from "expo-router";
 
+import {
+    getRecentFoods,
+    RecentFoodRow,
+} from "@/database/database";
 
-export default function SavedFoodsScreen() {
+export default function RecentFoodsScreen() {
     const router = useRouter();
 
-    const [savedFoods, setSavedFoods] = useState<SavedFoodRow[]>([]);
-
-    const loadSavedFoods = async () => {
-        const foods = await getSavedFood();
-        setSavedFoods(foods);
-    };
-
-    const [search, setSearch] = useState("");
-
-    const filteredFoods = savedFoods.filter((food) => 
-        food.name.toLowerCase().includes(search.trim().toLowerCase()));
+    const [recentFoods , setRecentFoods] = useState<RecentFoodRow[]>([]);
 
     useFocusEffect(
         useCallback(() => {
-            loadSavedFoods();
+            const loadRecentFoods = async () => {
+                const foods = await getRecentFoods();
+                setRecentFoods(foods);
+            };
+
+            loadRecentFoods();
         }, [])
     );
-
-    
 
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()}>
-                    <Text style={styles.backButton}>‹ Back</Text>
+                    <Text style={styles.backButton}>
+                        ‹ Back
+                    </Text>
                 </TouchableOpacity>
 
-                <Text style={styles.title}>Saved Foods</Text>
+                <Text style={styles.title}>
+                    Recent Foods
+                </Text>
 
                 <View style={styles.headerSpacer} />
             </View>
@@ -52,46 +55,28 @@ export default function SavedFoodsScreen() {
             <ScrollView
                 contentContainerStyle={styles.content}
             >
-                <TextInput
-                    style={styles.searchInput}
-                    value={search}
-                    onChangeText={setSearch}
-                    placeholder="Search saved foods"
-                    clearButtonMode="while-editing"
-                />
-
-                {savedFoods.length === 0 ? (
+                {recentFoods.length === 0 ? (
                     <View style={styles.emptyContainer}>
                         <Text style={styles.emptyTitle}>
-                            No Saved Foods
+                            No Recent Foods
                         </Text>
 
                         <Text style={styles.emptyText}>
-                            Foods you save will appear here.
-                        </Text>
-                    </View>
-                ): filteredFoods.length === 0 ?(
-                    <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyTitle}>
-                            No Results
-                        </Text>
-
-                        <Text style={styles.emptyText}>
-                            No saved foods match "{search}".
+                            Foods you log will appear here
                         </Text>
                     </View>
                 ) : (
-                    filteredFoods.map((food) => (
+                    recentFoods.map((food, index) => (
                         <TouchableOpacity
-                            key={food.id}
+                            key={food.id.toString()}
                             style={styles.foodCard}
                             onPress={() => {
                                 router.push({
-                                    pathname: "/log-saved-food",
+                                    pathname: "/log-recent-food",
                                     params: {
                                         id: food.id.toString(),
                                     },
-                                });
+                                })
                             }}
                         >
                             <View>
@@ -99,18 +84,20 @@ export default function SavedFoodsScreen() {
                                     {food.name}
                                 </Text>
 
-                                <Text style={styles.serving}>
-                                    {food.serving_amount}{" "}
-                                    {food.serving_unit}
-                                </Text>
+                                {food.amount != null && food.unit && (
+                                    <Text style={styles.serving}>
+                                        {food.amount} {food.unit}
+                                    </Text>
+                                )}
                             </View>
+
                             <View style={styles.nutrition}>
                                 <Text style={styles.calories}>
                                     {food.calories} kcal
                                 </Text>
 
                                 <Text style={styles.protein}>
-                                    {food.protein} g protein
+                                    {food.protein}g protein
                                 </Text>
                             </View>
                         </TouchableOpacity>
@@ -120,6 +107,7 @@ export default function SavedFoodsScreen() {
         </SafeAreaView>
     );
 }
+
 
 const styles = StyleSheet.create({
     container: {
