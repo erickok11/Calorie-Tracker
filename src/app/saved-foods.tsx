@@ -81,38 +81,52 @@ export default function SavedFoodsScreen() {
                     </View>
                 ) : (
                     filteredFoods.map((food) => (
-                        <TouchableOpacity
-                            key={food.id}
-                            style={styles.foodCard}
-                            onPress={() => {
-                                router.push({
-                                    pathname: "/log-saved-food",
-                                    params: {
-                                        id: food.id.toString(),
-                                    },
-                                });
-                            }}
-                        >
-                            <View>
-                                <Text style={styles.foodName}>
-                                    {food.name}
-                                </Text>
+                        <View key={food.id} style={styles.foodCard}>
+                            <TouchableOpacity
+                                key={food.id}
+                                style={styles.foodCardMain}
+                                onPress={() => {
+                                    router.push({
+                                        pathname: "/log-saved-food",
+                                        params: {
+                                            id: food.id.toString(),
+                                        },
+                                    });
+                                }}
+                            >
+                                <View>
+                                    <Text style={styles.foodName}>
+                                        {food.name}
+                                    </Text>
 
-                                <Text style={styles.serving}>
-                                    {food.serving_amount}{" "}
-                                    {food.serving_unit}
-                                </Text>
-                            </View>
-                            <View style={styles.nutrition}>
-                                <Text style={styles.calories}>
-                                    {food.calories} kcal
-                                </Text>
+                                    <Text style={styles.serving}>
+                                        {food.serving_amount}{" "}
+                                        {food.serving_unit}
+                                    </Text>
+                                </View>
+                                <View style={styles.nutrition}>
+                                    <Text style={styles.calories}>
+                                        {food.calories} kcal
+                                    </Text>
 
-                                <Text style={styles.protein}>
-                                    {food.protein} g protein
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
+                                    <Text style={styles.protein}>
+                                        {food.protein} g protein
+                                    </Text>
+                                </View>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.editButton}
+                                onPress={() => {
+                                    router.push({
+                                        pathname: "/edit-saved-food",
+                                        params: {id: food.id.toString() },
+                                    });
+                                }}
+                            >
+                                <Text style={styles.editButtonText}>Edit</Text>
+                            </TouchableOpacity>
+                        </View>
                     ))
                 )}
             </ScrollView>
@@ -172,7 +186,6 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 10,
         flexDirection: "row",
-        justifyContent: "space-between",
         alignItems: "center",
     },
 
@@ -209,5 +222,25 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         fontSize: 16,
         marginBottom: 16,
+    },
+
+    foodCardMain: {
+        flex:1, 
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap:8,
+    },
+
+    editButton: {
+        marginLeft: 12,
+        paddingVertical: 10,
+        paddingHorizontal: 8,
+    },
+
+    editButtonText: {
+        color: "#007AFF",
+        fontSize: 15,
+        fontWeight: "600",
     },
 });

@@ -361,6 +361,30 @@ export async function getSavedFoodById(id: number) {
     return food;
 }
 
+export async function updateSavedFood(
+    id: number,
+    food: Omit<SavedFoodRow, "id">
+): Promise<void> {
+    const database = await getDatabase();
+
+    await database.runAsync(
+        `UPDATE saved_foods
+         SET
+            name = ?,
+            serving_amount = ?,
+            serving_unit = ?,
+            calories = ?,
+            protein = ?
+        WHERE id = ?`,
+        food.name,
+        food.serving_amount,
+        food.serving_unit,
+        food.calories,
+        food.protein,
+        id
+    );
+}
+
 export async function getRecentFoods(search: string = ""): Promise<RecentFoodRow[]> {
     const database = await getDatabase();
 
