@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 
 import {
     ScrollView,
@@ -6,6 +6,7 @@ import {
     Text,
     TouchableOpacity,
     View,
+    TextInput,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -25,16 +26,33 @@ export default function RecentFoodsScreen() {
 
     const [recentFoods , setRecentFoods] = useState<RecentFoodRow[]>([]);
 
+
+    const [search, setSearch] = useState("");
+
     useFocusEffect(
         useCallback(() => {
+            let active = true;
+
             const loadRecentFoods = async () => {
-                const foods = await getRecentFoods();
-                setRecentFoods(foods);
+                try {
+                    const foods = await getRecentFoods(search);
+
+                    if(active) {
+                        setRecentFoods(foods);
+                    }
+                } catch (error) {
+                    console.error("Failed to search recent foods:", error);
+                }
             };
 
             loadRecentFoods();
-        }, [])
+
+            return () => {
+                active = false;
+            };
+        }, [search])
     );
+
 
     return (
         <SafeAreaView style={styles.container}>
@@ -55,14 +73,26 @@ export default function RecentFoodsScreen() {
             <ScrollView
                 contentContainerStyle={styles.content}
             >
+                <TextInput
+                    style={styles.searchInput}
+                    value={search}
+                    onChangeText={setSearch}
+                    placeholder="Search recent foods..."
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    clearButtonMode="while-editing"
+                />
+                
                 {recentFoods.length === 0 ? (
                     <View style={styles.emptyContainer}>
                         <Text style={styles.emptyTitle}>
-                            No Recent Foods
+                            {search.trim() ? "No results" : "No recent foods"}
                         </Text>
 
                         <Text style={styles.emptyText}>
-                            Foods you log will appear here
+                            {search.trim()
+                                ? `No recent food match "${search}".`
+                                : "Foods you log will appear here."}
                         </Text>
                     </View>
                 ) : (

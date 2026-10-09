@@ -35,7 +35,6 @@ export default function SavedFoodsScreen() {
         }, [])
     );
 
-    
 
     return (
         <SafeAreaView style={styles.container}>

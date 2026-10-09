@@ -361,7 +361,7 @@ export async function getSavedFoodById(id: number) {
     return food;
 }
 
-export async function getRecentFoods() {
+export async function getRecentFoods(search: string = ""): Promise<RecentFoodRow[]> {
     const database = await getDatabase();
 
     return await database.getAllAsync<RecentFoodRow>(
@@ -378,8 +378,10 @@ export async function getRecentFoods() {
             FROM foods f2
             WHERE LOWER(f2.name) = LOWER(f.name)
         )
+        AND LOWER(f.name) LIKE ?
         ORDER BY f.id DESC
-        LIMIT 20`
+        LIMIT 20`,
+        `%${search.trim().toLowerCase()}%`
     );
 }
 
