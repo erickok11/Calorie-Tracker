@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import { getSavedFoodById, updateSavedFood } from "@/database/database";
+import { getSavedFoodById, updateSavedFood, deleteSavedFood } from "@/database/database";
 
 import UnitPicker from "@/components/UnitPicker";
 
@@ -35,6 +35,8 @@ export default function EditSavedFoodScreen() {
     const [unit, setUnit] = useState<FoodUnit | undefined>(undefined);
     const [calories, setCalories] = useState("");
     const [protein, setProtein] = useState("");
+
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         let active = true;
@@ -126,6 +128,7 @@ export default function EditSavedFoodScreen() {
         } finally {
             setIsSaving(false);
         }
+
     };
 
     if (loading) {
@@ -138,6 +141,46 @@ export default function EditSavedFoodScreen() {
             </SafeAreaView>
         );
     }
+
+    const handleDelete = async () => {
+        if (isSaving || isDeleting) return;
+
+        Alert.alert(
+            "Delete Save Food",
+            `Are you sure you want to delete "${name}"?`,
+            [
+                {
+                    text:"Cancel",
+                    style:"cancel",
+                },
+                {
+                    text:"Delete",
+                    style:"destructive",
+                    onPress: async() => {
+                        setIsDeleting(true);
+
+                        try {
+                            await deleteSavedFood(Number(id));
+
+                            router.back();
+                        } catch (error){
+                            console.error(
+                                "Failed to delete saved food:",
+                                error
+                            );
+
+                            Alert.alert(
+                                "Error",
+                                "Could not delete this food."
+                            );
+                        } finally {
+                            setIsDeleting(false);
+                        }
+                    },
+                },
+            ]
+        );
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -203,6 +246,16 @@ export default function EditSavedFoodScreen() {
                 >
                     <Text style={styles.saveButtonText}>
                         {isSaving ? "Saving..." : "Save Changes"}
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={handleDelete}
+                    disabled={isSaving || isDeleting}
+                >
+                    <Text style={styles.deleteButtonText}>
+                        {isDeleting ? "Deleting..." : "Delete Saved Food"}
                     </Text>
                 </TouchableOpacity>
             </ScrollView>
@@ -286,6 +339,18 @@ const styles = StyleSheet.create({
 
     saveButtonText: {
         color: "white",
+        fontSize: 17,
+        fontWeight: "600",
+    },
+
+    deleteButton: {
+        paddingVertical: 16,
+        alignItems: "center",
+        marginTop: 12,
+    },
+
+    deleteButtonText: {
+        color: "#FF3B30",
         fontSize: 17,
         fontWeight: "600",
     },
