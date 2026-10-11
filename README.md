@@ -16,6 +16,10 @@ set personalized nutrition goals, and review their progress over time.
 - History calendar
 - Daily goal history
 - Persistent local storage using SQLite
+- Saved Foods/ Recent Foods logging
+- Food Search in saved food
+- Unit conversion
+- Edit and delete saved food
 
 ## Beta Testing
 
@@ -27,17 +31,13 @@ Feedback and bug reports are greatly appreciated
 
 ## Roadmap
 
-### 0.3.0 - Faster food logging
+### 0.4.0 - Camera Food Logging(Barcode)
 
-- Saved Foods
-- Recent foods
-- food search
-- improved serving sizes and units
+- Barcode Scanning
+- Nutrition database integration
 
 ### Future
 
-- Barcode scanning
-- Nutrition database integration
 - Photo-based food analysis
 - Detailed historical food logs
 - Personalized goals with ai
@@ -73,6 +73,6 @@ npm test
 ```
 
 ## Status
-Current Beta: v0.2.1
+Current Beta: v0.3.0
 
 This project is actively under development.
