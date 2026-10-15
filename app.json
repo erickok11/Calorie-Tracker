@@ -2,13 +2,12 @@
   "expo": {
     "name": "CalorieTracker",
     "slug": "CalorieTracker",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "calorietracker",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.erickok.calorietracker",
       "supportsTablet": true,
       "infoPlist": {

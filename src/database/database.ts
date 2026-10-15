@@ -43,6 +43,7 @@ export type SavedFoodRow = {
     calories: number;
     protein: number;
     serving_description?: string | null;
+    barcode?: string | null;
 }
 
 export type RecentFoodRow = {
@@ -108,7 +109,8 @@ export async function initializeDatabase() : Promise<SQLite.SQLiteDatabase> {
                 serving_unit TEXT NOT NULL,
                 calories REAL NOT NULL,
                 protein REAL NOT NULL,
-                serving_description TEXT
+                serving_description TEXT,
+                barcode TEXT UNIQUE
             );
         `);
 
@@ -130,6 +132,28 @@ export async function initializeDatabase() : Promise<SQLite.SQLiteDatabase> {
             INSERT OR IGNORE INTO settings
             (id, calorie_goal, protein_goal)
             VALUES (1, 1800, 140)
+        `);
+
+        const updatedColumns = await database.getAllAsync<{
+            name: string;
+        }> (
+            "PRAGMA table_info(saved_foods)"
+        );
+
+        const hasBarcode = updatedColumns.some(
+            (column) => column.name === "barcode"
+        );
+
+        if (!hasBarcode) {
+            await database.execAsync(
+                "ALTER TABLE saved_foods ADD COLUMN barcode TEXT"
+            );
+        }
+
+        await database.execAsync(`
+            CREATE UNIQUE INDEX IF NOT EXISTS
+            idx_saved_foods_barcode
+            ON saved_foods(barcode);
         `);
 
         db = database;
@@ -342,7 +366,8 @@ export async function createSavedFood(
     servingUnit: string,
     calories: number,
     protein: number,
-    servingDescription: string | null = null
+    servingDescription: string | null = null,
+    barcode: string | null = null
 ){
     const database = await getDatabase();
 
@@ -353,15 +378,17 @@ export async function createSavedFood(
          serving_unit,
          calories,
          protein,
-         serving_description
+         serving_description,
+         barcode
         )
-        VALUES(?, ?, ?, ?, ?, ?)`,
+        VALUES(?, ?, ?, ?, ?, ?, ?)`,
         name,
         servingAmount,
         servingUnit,
         calories,
         protein,
-        servingDescription
+        servingDescription,
+        barcode
     );
 
     return result.lastInsertRowId;
@@ -459,5 +486,21 @@ export async function getRecentFoodById(id:number) : Promise<RecentFoodRow | nul
         FROM foods
         WHERE id = ?`,
         id
+    );
+}
+
+export async function getSavedFoodByBarcode(
+    barcode: string
+): Promise<{ id: number } | null> {
+    const database  = await getDatabase();
+
+    return await database.getFirstAsync<{ id: number}>(
+        `
+        SELECT id
+        FROM saved_foods
+        WHERE barcode = ?
+        LIMIT 1
+        `,
+        barcode
     );
 }

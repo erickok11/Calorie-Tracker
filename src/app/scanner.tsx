@@ -8,33 +8,27 @@ import {
 
 import {
     ActivityIndicator,
+    Alert,
+    Keyboard,
+    ScrollView,
     StyleSheet,
     Text,
-    TouchableOpacity,
-    View,
     TextInput,
-    Keyboard,
-    InputAccessoryView,
-    Alert,
+    TouchableOpacity,
+    View
 } from "react-native";
 
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
     getProductByBarcode,
     type BarcodeProduct,
 } from "@/services/openFoodFacts";
 
-import UnitPicker from "@/components/UnitPicker";
-
-import { FoodUnit } from "@/constants/unit";
-
-import { convertAmount } from "@/utils/units";
-
 import { useFood } from "@/context/FoodContext";
 
-import { createSavedFood } from "@/database/database";
+import { createSavedFood, getSavedFoodByBarcode } from "@/database/database";
 
 export default function ScannerScreen(){
     const router = useRouter();
@@ -57,6 +51,8 @@ export default function ScannerScreen(){
     const [isSavingTemplate, setIsSavingTemplate] = useState(false);
 
     const [savedTemplate, setSavedTemplate] = useState(false);
+
+    const [alreadySaved, setAlreadySaved] = useState(false);
 
     const servingCount = Number(servings);
 
@@ -91,6 +87,10 @@ export default function ScannerScreen(){
 
         try {
             const result = await getProductByBarcode(data);
+
+            const existingFood = await getSavedFoodByBarcode(data);
+
+            setAlreadySaved(existingFood !== null);
 
             if(result) {
                 setProduct(result);
@@ -158,7 +158,7 @@ export default function ScannerScreen(){
             !product || isSavingTemplate || savedTemplate ||
             product.caloriesPerServing === null || product.proteinPerServing === null ||
             !Number.isFinite(product.caloriesPerServing) || !Number.isFinite(product.proteinPerServing) ||
-            product.caloriesPerServing < 0 || product.proteinPerServing < 0
+            product.caloriesPerServing < 0 || product.proteinPerServing < 0 || alreadySaved
         ) {
             return;
         }
@@ -172,10 +172,12 @@ export default function ScannerScreen(){
                 "serving",
                 product.caloriesPerServing,
                 product.proteinPerServing,
-                product.servingSize
+                product.servingSize,
+                product.barcode
             );
 
             setSavedTemplate(true);
+            setAlreadySaved(true);
 
             Alert.alert(
                 "Food Saved",
@@ -237,7 +239,7 @@ export default function ScannerScreen(){
             <View style={styles.cameraContainer}>
                 {!barcode ? (
                     <CameraView
-                        style={styles.cameraContainer}
+                        style={styles.camera}
                         facing="back"
                         barcodeScannerSettings={{
                             barcodeTypes: [
@@ -250,7 +252,13 @@ export default function ScannerScreen(){
                         onBarcodeScanned={handleBarcodeScanned}
                     />
                 ) : (
-                    <View style={styles.resultContainer}>
+                    <ScrollView 
+                        style={styles.resultContainer}
+                        contentContainerStyle={styles.resultContent}
+                        keyboardShouldPersistTaps="handled"
+                        keyboardDismissMode="on-drag"
+                        automaticallyAdjustKeyboardInsets={true}
+                    >
                         {isLoading ? (
                             <>
                                 <ActivityIndicator size="large" />
@@ -331,12 +339,12 @@ export default function ScannerScreen(){
                                 <TouchableOpacity
                                     style={[
                                         styles.saveTemplateButton,
-                                        (isSavingTemplate || savedTemplate) &&
+                                        (isSavingTemplate || alreadySaved) &&
                                         styles.saveTemplateButtonDisabled,
                                     ]}
                                     disabled={
                                         isSavingTemplate ||
-                                        savedTemplate ||
+                                        alreadySaved ||
                                         product.caloriesPerServing === null ||
                                         product.proteinPerServing === null
                                     }
@@ -345,7 +353,8 @@ export default function ScannerScreen(){
                                     <Text style={styles.saveTemplateButtonText}>
                                         {isSavingTemplate
                                             ? "Saving..."
-                                            : savedTemplate ? "Saved!" : "Save to Saved Foods"}
+                                            : savedTemplate ? "Saved!" 
+                                            : alreadySaved ? "Already Saved" : "Save to Saved Foods"}
                                     </Text>
                                 </TouchableOpacity>
                                     
@@ -357,14 +366,14 @@ export default function ScannerScreen(){
                         )}
 
                         <TouchableOpacity
-                            style={styles.button}
+                            style={styles.scanAgainButton}
                             onPress={handleScanAgain}
                         >
-                            <Text style={styles.buttonText}>
+                            <Text style={styles.scanAgainButtonText}>
                                 Scan Again
                             </Text>
                         </TouchableOpacity>
-                    </View>
+                    </ScrollView>
                 )}
             </View>
 
@@ -415,9 +424,6 @@ const styles = StyleSheet.create({
 
     resultContainer: {
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 20,
     },
 
     resultTitle: {
@@ -571,4 +577,26 @@ const styles = StyleSheet.create({
         fontSize: 17,
         fontWeight: "600",
     },
+
+    resultContent: {
+        flexGrow:1,
+        padding:20,
+        paddingBottom: 40,
+        alignItems: "stretch",
+    },
+
+    scanAgainButton: {
+        backgroundColor: "#E8F2FF",
+        borderRadius: 12,
+        paddingVertical: 16,
+        alignItems: "center",
+        marginTop: 16,
+        width: "100%",
+    },
+
+    scanAgainButtonText: {
+        color: "#007AFF",
+        fontSize: 17,
+        fontWeight: "600",
+    }
 });
