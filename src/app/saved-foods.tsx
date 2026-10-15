@@ -113,6 +113,7 @@ export default function SavedFoodsScreen() {
                                         {food.protein} g protein
                                     </Text>
                                 </View>
+
                             </TouchableOpacity>
 
                             <TouchableOpacity

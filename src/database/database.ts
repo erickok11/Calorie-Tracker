@@ -3,6 +3,8 @@ import * as SQLite from "expo-sqlite";
 
 let db: SQLite.SQLiteDatabase | null = null;
 
+let initializationPromise: Promise<SQLite.SQLiteDatabase> | null = null;
+
 export type FoodRow = {
     id: number;
     name: string;
@@ -40,6 +42,7 @@ export type SavedFoodRow = {
     serving_unit: FoodUnit;
     calories: number;
     protein: number;
+    serving_description?: string | null;
 }
 
 export type RecentFoodRow = {
@@ -61,56 +64,84 @@ export function getLocalDate(){
     return `${year}-${month}-${day}`;
 }
 
-export async function initializeDatabase() {
-    db = await SQLite.openDatabaseAsync(
-        "calorieTracker.db"
-    );
+export async function initializeDatabase() : Promise<SQLite.SQLiteDatabase> {
+    if(db) {
+        return db;
+    }
 
-    await db.execAsync(
-        `
-        CREATE TABLE IF NOT EXISTS foods (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            amount REAL,
-            unit TEXT,
-            calories REAL NOT NULL,
-            protein REAL NOT NULL,
-            date TEXT NOT NULL
-        );
-        
-        CREATE TABLE IF NOT EXISTS settings (
-            id INTEGER PRIMARY KEY NOT NULL,
-            calorie_goal REAL NOT NULL,
-            protein_goal REAL NOT NULL
+    if(initializationPromise) {
+        return initializationPromise;
+    }
+
+    initializationPromise = (async () => { 
+        const database = await SQLite.openDatabaseAsync(
+            "calorieTracker.db"
         );
 
-        CREATE TABLE IF NOT EXISTS daily_goals (
-            date TEXT PRIMARY KEY NOT NULL,
-            calorie_goal REAL NOT NULL,
-            protein_goal REAL NOT NULL
+        await database.execAsync(`
+            CREATE TABLE IF NOT EXISTS foods (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                amount REAL,
+                unit TEXT,
+                calories REAL NOT NULL,
+                protein REAL NOT NULL,
+                data TEXT NOT NULL
+                );
+                
+            CREATE TABLE IF NOT EXISTS settings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                calorie_goal REAL NOT NULL,
+                protein_goal REAL NOT NULL
+            );
+            
+            CREATE TABLE IF NOT EXISTS daily_goals (
+                date TEXT PRIMARY KEY NOT NULL,
+                calorie_goal REAL NOT NULL,
+                protein_goal REAL NOT NULL
+            );
+            
+            CREATE TABLE IF NOT EXISTS saved_foods (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                serving_amount REAL NOT NULL,
+                serving_unit TEXT NOT NULL,
+                calories REAL NOT NULL,
+                protein REAL NOT NULL,
+                serving_description TEXT
+            );
+        `);
+
+        const columns = await database.getAllAsync<{ name: string }>(
+            "PRAGMA table_info(saved_foods)"
         );
 
-        CREATE TABLE IF NOT EXISTS saved_foods (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            serving_amount REAL NOT NULL,
-            serving_unit TEXT NOT NULL,
-            calories REAL NOT NULL,
-            protein REAL NOT NULL
-        )
-        `
+        const hasServingDescription = columns.some(
+            (column) => column.name === "serving_description"
+        );
 
-    );
+        if (!hasServingDescription){
+            await database.execAsync(
+                "ALTER TABLE saved_foods ADD COLUMN serving_description TEXT"
+            );
+        }
 
-    await db.runAsync(
-        `INSERT OR IGNORE INTO settings
-         (id, calorie_goal, protein_goal)
-         VALUES (1, 1800, 140)
-        `
-    );
+        await database.runAsync(`
+            INSERT OR IGNORE INTO settings
+            (id, calorie_goal, protein_goal)
+            VALUES (1, 1800, 140)
+        `);
 
+        db = database;
 
-    return db;
+        return database;
+    })();
+
+    try {
+        return await initializationPromise;
+    } finally {
+        initializationPromise = null;
+    }
 }
 
 export async function getDatabase() {
@@ -298,7 +329,8 @@ export async function getSavedFood() {
          serving_amount,
          serving_unit,
          calories,
-         protein
+         protein,
+         serving_description
         FROM saved_foods
         ORDER BY name ASC`
     );
@@ -309,7 +341,8 @@ export async function createSavedFood(
     servingAmount: number,
     servingUnit: string,
     calories: number,
-    protein: number
+    protein: number,
+    servingDescription: string | null = null
 ){
     const database = await getDatabase();
 
@@ -319,14 +352,16 @@ export async function createSavedFood(
          serving_amount,
          serving_unit,
          calories,
-         protein
+         protein,
+         serving_description
         )
-        VALUES(?, ?, ?, ?, ?)`,
+        VALUES(?, ?, ?, ?, ?, ?)`,
         name,
         servingAmount,
         servingUnit,
         calories,
-        protein
+        protein,
+        servingDescription
     );
 
     return result.lastInsertRowId;
@@ -352,7 +387,8 @@ export async function getSavedFoodById(id: number) {
          serving_amount,
          serving_unit,
          calories,
-         protein
+         protein,
+         serving_description
         FROM saved_foods
         WHERE id = ?`,
         id

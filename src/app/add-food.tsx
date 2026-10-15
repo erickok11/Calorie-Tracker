@@ -27,6 +27,8 @@ import {
     SavedFoodRow,
 } from "@/database/database";
 
+import { Ionicons } from "@expo/vector-icons";
+
 export default function AddFoodScreen() {
     const { addFood } = useFood();
 
@@ -110,13 +112,28 @@ export default function AddFoodScreen() {
             >
                 <ScrollView style={styles.content}>
                     <View style={styles.header}>
-                        <TouchableOpacity onPress={() => router.back()}>
-                            <Text style={styles.cancel}>Cancel</Text>
-                        </TouchableOpacity>
+                        <View style={styles.headerSide}>
+                            <TouchableOpacity onPress={() => router.back()}>
+                                <Text style={styles.cancel}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
 
                         <Text style={styles.title}>Add Food</Text>
 
-                        <View style={styles.headerSpacer} />
+                        <View style={[styles.headerSide, styles.headerRight]}>
+                            <TouchableOpacity
+                                style={styles.container}
+                                onPress={() => router.push("/scanner")}
+                                accessibilityRole="button"
+                                accessibilityLabel="Scan food"
+                            >
+                                <Ionicons
+                                    name="camera-outline"
+                                    size={26}
+                                    color="#007AFF"
+                                />
+                            </TouchableOpacity>
+                        </View>
                     </View>
 
                     <TouchableOpacity
@@ -233,21 +250,15 @@ const styles = StyleSheet.create({
         padding: 24,
     },
 
-    header: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 35,
-    },
-
     title: {
         fontSize: 20,
         fontWeight: "700",
+        textAlign: "center",
     },
 
     cancel: {
         fontSize: 17,
-        color: "#3478F6",
+        color: "#007AFF",
     },
 
     headerSpacer: {
@@ -445,6 +456,45 @@ const styles = StyleSheet.create({
     savedFoodsButtonText: {
         fontSize: 16,
         fontWeight: "600",
+    },
+
+    barcodeButton: {
+        backgroundColor: "#E8F2FF",
+        borderRadius: 12,
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        marginBottom: 12,
+        alignItems: "center",
+    },
+
+    barcodeButtonText: {
+        color: "#007AFF",
+        fontSize: 16,
+        fontWeight: "600",
+    },
+
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        width:"100%",
+
+    },
+
+    headerSide: {
+        flex: 1,
+    },
+
+    headerRight: {
+        alignItems: "flex-end",
+    },
+
+    cameraButton: {
+        width: 44,
+        height: 44,
+        alignItems: "center",
+        justifyContent: "center",
     },
 });
 

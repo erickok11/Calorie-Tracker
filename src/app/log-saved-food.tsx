@@ -214,6 +214,12 @@ export default function LogSavedFoodScreen() {
                         <Text style={styles.resultValue}>
                             {nutrition.protein.toFixed(1)}g protein
                         </Text>
+
+                        {food.serving_description && (
+                            <Text style={styles.reference}>
+                                1 serving = {food.serving_description}
+                            </Text>
+                        )}
                     </View>
 
                     <TouchableOpacity
