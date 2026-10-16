@@ -70,7 +70,7 @@ export default function HomeScreen() {
             <ProgressCircle value={totalCalories} goal={calorieGoal} />
 
             <Text style={styles.remainingText}>
-              {Math.max(calorieGoal - totalCalories, 0)} kcal remaining
+              {Math.max(calorieGoal - totalCalories, 0).toFixed(0)} kcal remaining
             </Text>
           </View>
 
@@ -80,7 +80,7 @@ export default function HomeScreen() {
             <ProgressCircle value={totalProtein} goal={proteinGoal} unit="g" />
 
             <Text style={styles.remainingText}>
-              {Math.max(proteinGoal-totalProtein, 0)}g remaining
+              {Math.max(proteinGoal-totalProtein, 0).toFixed(1)}g remaining
             </Text>
           </View>
         </View>

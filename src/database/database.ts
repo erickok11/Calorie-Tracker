@@ -5,6 +5,14 @@ let db: SQLite.SQLiteDatabase | null = null;
 
 let initializationPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
+export type ExtraNutrition = {
+    carbs: number | null;
+    fat: number | null;
+    sugar: number | null;
+    fiber: number | null;
+    sodium_mg: number | null;
+}
+
 export type FoodRow = {
     id: number;
     name: string;
@@ -13,7 +21,7 @@ export type FoodRow = {
     calories: number;
     protein: number;
     date: string;
-};
+} & ExtraNutrition;
 
 export type settingsRow = {
     id: number;
@@ -55,6 +63,8 @@ export type RecentFoodRow = {
     protein: number;
 }
 
+export type ExtraNutritionInput = Partial<ExtraNutrition>;
+
 export function getLocalDate(){
     const now = new Date();
 
@@ -63,6 +73,32 @@ export function getLocalDate(){
     const day = String(now.getDate()).padStart(2, "0");
 
     return `${year}-${month}-${day}`;
+}
+
+async function addMissingNutritionColumns(
+    database: SQLite.SQLiteDatabase,
+    table: "foods" | "saved_foods"
+) {
+    const columns = await database.getAllAsync<{
+        name: string;
+    }>(`PRAGMA table_info(${table})`);
+
+    const existingColumns = new Set(
+        columns.map((column) => column.name)
+    );
+
+    const newColumns = [
+        "carbs", "fat", "sugar", "fiber", "sodium_mg"
+    ];
+
+    for (const column of newColumns) {
+        if(!existingColumns.has(column)){
+            await database.execAsync(
+                `ALTER TABLE ${table} ADD COLUMN ${column} REAL`
+            );
+        };
+
+    }
 }
 
 export async function initializeDatabase() : Promise<SQLite.SQLiteDatabase> {
@@ -87,7 +123,12 @@ export async function initializeDatabase() : Promise<SQLite.SQLiteDatabase> {
                 unit TEXT,
                 calories REAL NOT NULL,
                 protein REAL NOT NULL,
-                data TEXT NOT NULL
+                carbs REAL,
+                fat REAL,
+                sugar REAL,
+                fiber REAL,
+                sodium_mg REAL,
+                date TEXT NOT NULL
                 );
                 
             CREATE TABLE IF NOT EXISTS settings (
@@ -109,6 +150,11 @@ export async function initializeDatabase() : Promise<SQLite.SQLiteDatabase> {
                 serving_unit TEXT NOT NULL,
                 calories REAL NOT NULL,
                 protein REAL NOT NULL,
+                carbs REAL,
+                fat REAL,
+                sugar REAL,
+                fiber REAL,
+                sodium_mg REAL,
                 serving_description TEXT,
                 barcode TEXT UNIQUE
             );
@@ -146,7 +192,7 @@ export async function initializeDatabase() : Promise<SQLite.SQLiteDatabase> {
 
         if (!hasBarcode) {
             await database.execAsync(
-                "ALTER TABLE saved_foods ADD COLUMN barcode TEXT"
+                `ALTER TABLE saved_foods ADD COLUMN barcode TEXT`
             );
         }
 
@@ -156,8 +202,12 @@ export async function initializeDatabase() : Promise<SQLite.SQLiteDatabase> {
             ON saved_foods(barcode);
         `);
 
-        db = database;
+        await addMissingNutritionColumns(database, "foods");
 
+        await addMissingNutritionColumns(database, "saved_foods");
+
+        db = database;
+        
         return database;
     })();
 
@@ -182,19 +232,25 @@ export async function insertFood(
     unit: string | undefined,
     calories: number,
     protein: number,
-    date: string
+    date: string,
+    nutrients: ExtraNutritionInput = {}
 ){
     const database = await getDatabase();
 
     const result = await database.runAsync(
         `INSERT INTO foods
-            (name, amount, unit, calories, protein, date)
-            VALUES (?, ?, ?, ?, ?, ?)`,
+            (name, amount, unit, calories, protein, carbs, fat, sugar, fiber, sodium_mg, date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         name,
         amount ?? null,
         unit ?? null,
         calories,
         protein,
+        nutrients.carbs ?? null,
+        nutrients.fat ?? null,
+        nutrients.sugar ?? null,
+        nutrients.fiber ?? null,
+        nutrients.sodium_mg ?? null,
         date
     );
 

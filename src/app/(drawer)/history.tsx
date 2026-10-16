@@ -245,7 +245,7 @@ export default function HistoryScreen() {
                                         </Text>
 
                                         <ProgressCircle
-                                            value={summary.total_calories}
+                                            value={Math.round(summary.total_calories)}
                                             goal={summary.calorie_goal}
                                         />
                                     </View>
@@ -256,7 +256,7 @@ export default function HistoryScreen() {
                                         </Text>
 
                                         <ProgressCircle
-                                            value={summary.total_protein}
+                                            value={Number(summary.total_protein.toFixed(1))}
                                             goal={summary.protein_goal}
                                             unit="g"
                                         />
