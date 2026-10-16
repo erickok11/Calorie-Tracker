@@ -7,19 +7,34 @@ set personalized nutrition goals, and review their progress over time.
 
 ## Current Features
 
-- Daily calorie tracking
-- Daily protein tracking
-- Custom calorie and protein goals
-- Food logging with amount and units
-- Edit and delete food entries
-- Nutrition progress ring
-- History calendar
-- Daily goal history
-- Persistent local storage using SQLite
-- Saved Foods/ Recent Foods logging
-- Food Search in saved food
-- Unit conversion
-- Edit and delete saved food
+### Daily Nutrition Tracking
+- Log food with calories, protein, and serving amounts.
+- Track daily progress using circular calorie and protein indicators
+- Customize daily calorie and protein goals
+- Edit and delete logged foods
+
+### Food History
+- View previous food logs using a monthly calendar
+- See daily calorie and protein summaries
+- Tack whether daily nutrition goals were achieved
+
+### Saved and Recent Foods
+- Save frequently eaten foods for quick logging
+- Automatically access previously logged foods
+- Search saved and recent foods
+- Edit and delete saved food templates
+- Adjust serving quantities with automatic nutrition calculations
+- Convert between compatible measurement units.
+
+### Barcode Scanning - New in v0.4.0
+- Scan packaged food barcodes using iPhone camera
+- Retrieve food information from Open Food Facts
+- Display product names, serving sizes, calories, and protein
+- Adjust the number of servings consumed
+- Automatically calculate total calories and protein
+- Add scanned foods directly to daily log
+- Save scanned product for future use
+- Detect previously saved barcodes to prevent duplicate saved entries
 
 ## Beta Testing
 
@@ -31,26 +46,31 @@ Feedback and bug reports are greatly appreciated
 
 ## Roadmap
 
-### 0.4.0 - Camera Food Logging(Barcode)
-
-- Barcode Scanning
-- Nutrition database integration
-
 ### Future
-
+- Carbonhydrates and fat tracking
+- Sugar, fiber, and sodium information
+- Expanded nutrition sumamries
+- Additional nutrition goals
 - Photo-based food analysis
 - Detailed historical food logs
 - Personalized goals with ai
-- meal suggestion with ai
+- Meal suggestion with ai
 
 ## Tech Stack
 
-- React Native
-- Expo
-- Expo router
-- TypeScript
-- SQLite
-- Jest
+- React Native - Mobile application framework
+- Expo - Development and navigation
+- Expo router - Development and navigation
+- TypeScript - application code
+- SQLite - Local food and settings storage
+- Jest - Unit test
+- Expo Camera - Barcode Scanning
+- Open Food Facts API - Food database for barcode scanning
+
+## Nutrition Data
+Barcode product information is provided by Open Food Facts, a community-maintained food
+database. Nutrition values may be incomplete or inaccurate. Users should verify information against
+product label when necessary.
 
 ## Development
 
@@ -73,6 +93,6 @@ npm test
 ```
 
 ## Status
-Current Beta: v0.3.0
+Current Beta: v0.4.0
 
 This project is actively under development.
