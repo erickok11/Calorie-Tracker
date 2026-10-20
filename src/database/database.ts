@@ -52,7 +52,7 @@ export type SavedFoodRow = {
     protein: number;
     serving_description?: string | null;
     barcode?: string | null;
-}
+} & ExtraNutrition;
 
 export type RecentFoodRow = {
     id: number;
@@ -61,7 +61,7 @@ export type RecentFoodRow = {
     unit: string | null;
     calories: number;
     protein: number;
-}
+} & ExtraNutrition;
 
 export type ExtraNutritionInput = Partial<ExtraNutrition>;
 
@@ -289,23 +289,36 @@ export async function updateFoodById(
     unit: string | undefined,
     calories: number,
     protein: number,
+    nutrients: ExtraNutritionInput = {}
 ){
     const datatbase = await getDatabase();
 
-    await datatbase.runAsync(
-        `UPDATE foods
-        SET name = ?,
-            amount = ?,
-            unit = ?,
-            calories = ?,
-            protein = ?
-        WHERE id = ?`,
+    const updates = ["name= ?", "amount= ?", "unit= ?", "calories= ?", "protein= ?"];
+
+    const values: (number | string | null)[] = [
         name,
         amount ?? null,
         unit ?? null,
         calories,
         protein,
-        id
+    ];
+
+    const nutrientColumns = ["carbs", "fat", "sugar", "fiber", "sodium_mg"] as const;
+
+    for (const column of nutrientColumns){
+        if(nutrients[column] !== undefined){
+            updates.push(`${column} = ?`);
+            values.push(nutrients[column] ?? null);
+        }
+    }
+
+    values.push(id)
+
+    await datatbase.runAsync(
+        `UPDATE foods
+        SET ${updates.join(", ")}
+        WHERE id = ?`,
+        values
     );
 }
 
@@ -403,14 +416,7 @@ export async function getSavedFood() {
     const database = await getDatabase();
 
     return await database.getAllAsync<SavedFoodRow>(
-        `SELECT
-         id,
-         name,
-         serving_amount,
-         serving_unit,
-         calories,
-         protein,
-         serving_description
+        `SELECT *
         FROM saved_foods
         ORDER BY name ASC`
     );
@@ -423,7 +429,8 @@ export async function createSavedFood(
     calories: number,
     protein: number,
     servingDescription: string | null = null,
-    barcode: string | null = null
+    barcode: string | null = null,
+    nutrients: ExtraNutritionInput = {}
 ){
     const database = await getDatabase();
 
@@ -435,16 +442,26 @@ export async function createSavedFood(
          calories,
          protein,
          serving_description,
-         barcode
+         barcode,
+         carbs,
+         fat,
+         sugar,
+         fiber,
+         sodium_mg
         )
-        VALUES(?, ?, ?, ?, ?, ?, ?)`,
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         name,
         servingAmount,
         servingUnit,
         calories,
         protein,
         servingDescription,
-        barcode
+        barcode,
+        nutrients.carbs ?? null,
+        nutrients.fat ?? null,
+        nutrients.sugar ?? null,
+        nutrients.fiber ?? null,
+        nutrients.sodium_mg ?? null
     );
 
     return result.lastInsertRowId;
@@ -464,14 +481,7 @@ export async function getSavedFoodById(id: number) {
     const database= await getDatabase();
 
     const food = await database.getFirstAsync<SavedFoodRow>(
-        `SELECT
-         id,
-         name,
-         serving_amount,
-         serving_unit,
-         calories,
-         protein,
-         serving_description
+        `SELECT *
         FROM saved_foods
         WHERE id = ?`,
         id
@@ -482,25 +492,44 @@ export async function getSavedFoodById(id: number) {
 
 export async function updateSavedFood(
     id: number,
-    food: Omit<SavedFoodRow, "id">
+    food: Pick<SavedFoodRow, | "name" | "serving_amount" | "serving_unit" | "calories" | "protein"> & ExtraNutritionInput
 ): Promise<void> {
     const database = await getDatabase();
 
-    await database.runAsync(
-        `UPDATE saved_foods
-         SET
-            name = ?,
-            serving_amount = ?,
-            serving_unit = ?,
-            calories = ?,
-            protein = ?
-        WHERE id = ?`,
+    const updates = [
+        "name = ?",
+        "serving_amount = ?",
+        "serving_unit = ?",
+        "calories = ?",
+        "protein = ?",
+    ];
+
+    const values: (string | number | null)[] = [
         food.name,
         food.serving_amount,
         food.serving_unit,
         food.calories,
         food.protein,
-        id
+    ] ;
+
+    const nutrientColumns = [
+        "carbs", "fat", "sugar", "fiber", "sodium_mg",
+    ] as const;
+
+    for (const column of nutrientColumns) {
+        if (food[column] !== undefined) {
+            updates.push(`${column} = ?`);
+            values.push(food[column] ?? null);
+        }
+    }
+
+    values.push(id);
+
+    await database.runAsync(
+        `UPDATE saved_foods
+         SET ${updates.join(", ")}
+         WHERE id = ?`,
+        values
     );
 }
 
@@ -508,13 +537,7 @@ export async function getRecentFoods(search: string = ""): Promise<RecentFoodRow
     const database = await getDatabase();
 
     return await database.getAllAsync<RecentFoodRow>(
-        `SELECT
-         f.id,
-         f.name,
-         f.amount,
-         f.unit,
-         f.calories,
-         f.protein
+        `SELECT f.*
         FROM foods f
         WHERE f.id = (
             SELECT MAX(f2.id)
@@ -532,13 +555,7 @@ export async function getRecentFoodById(id:number) : Promise<RecentFoodRow | nul
     const database = await getDatabase();
 
     return await database.getFirstAsync<RecentFoodRow>(
-        `SELECT
-         id,
-         name,
-         amount,
-         unit,
-         calories,
-         protein
+        `SELECT *
         FROM foods
         WHERE id = ?`,
         id

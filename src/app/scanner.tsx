@@ -69,6 +69,28 @@ export default function ScannerScreen(){
         validServings && product?.proteinPerServing != null
         ? servingCount * product.proteinPerServing : null;
 
+    const calculateTotal = (
+        perServing: number | null | undefined
+    ) : number | null => {
+        if (
+            !validServings || perServing == null || !Number.isFinite(perServing) || perServing < 0
+        ) {
+            return null;
+        }
+
+        const total = perServing * servingCount;
+
+        return Number.isFinite(total) ? total : null;
+    };
+
+    const extraNutrition = {
+        carbs: calculateTotal(product?.carbsPerServing),
+        fat: calculateTotal(product?.fatPerServing),
+        sugar: calculateTotal(product?.sugarPerServing),
+        fiber: calculateTotal(product?.fiberPerServing),
+        sodium_mg: calculateTotal(product?.sodiumMgPerServing),
+    };
+
     const canAdd = !isSaving && validServings
         && calculatedCalories !== null && Number.isFinite(calculatedCalories)
         && calculatedCalories >= 0 && calculatedProtein !== null
@@ -114,6 +136,9 @@ export default function ScannerScreen(){
         setProduct(null);
         setIsSavingTemplate(false);
         setSavedTemplate(false);
+        setServings("1");
+        setAlreadySaved(false);
+        setIsSaving(false);
     };
 
     const handleAddToToday = async () => {
@@ -136,6 +161,7 @@ export default function ScannerScreen(){
                 unit: "serving",
                 calories: calculatedCalories,
                 protein: calculatedProtein,
+                ...extraNutrition,
             });
 
             Keyboard.dismiss();
@@ -173,7 +199,14 @@ export default function ScannerScreen(){
                 product.caloriesPerServing,
                 product.proteinPerServing,
                 product.servingSize,
-                product.barcode
+                product.barcode,
+                {
+                    carbs: product.carbsPerServing,
+                    fat: product.fatPerServing,
+                    sugar: product.sugarPerServing,
+                    fiber: product.fiberPerServing,
+                    sodium_mg: product.sodiumMgPerServing,
+                }
             );
 
             setSavedTemplate(true);
@@ -288,6 +321,41 @@ export default function ScannerScreen(){
                                     {product.proteinPerServing ?? "N/A"}g 
                                 </Text>
 
+                                {[
+                                    {
+                                        label: "Carbohydrates",
+                                        value: product.carbsPerServing,
+                                        unit: "g",
+                                    },
+                                    {
+                                        label: "Fat",
+                                        value: product.fatPerServing,
+                                        unit: "g",
+                                    },
+                                    {
+                                        label: "Sugar",
+                                        value: product.sugarPerServing,
+                                        unit: "g",
+                                    },
+                                    {
+                                        label: "Fiber",
+                                        value: product.fiberPerServing,
+                                        unit: "g",
+                                    },
+                                    {
+                                        label: "Sodium",
+                                        value: product.sodiumMgPerServing,
+                                        unit: "mg",
+                                    },
+                                ].map((nutrient)=> (
+                                    <Text key={nutrient.label} style={styles.nutritionValue}>
+                                        {nutrient.label} Per Serving:{" "}
+                                        {nutrient.value === null
+                                            ? "N/A" : `${Number(nutrient.value.toFixed(1))} ${nutrient.unit}`
+                                        }
+                                    </Text>
+                                ))}
+
                                 <Text style={styles.inputLabel}>
                                     Number of servings eaten
                                 </Text>
@@ -321,6 +389,41 @@ export default function ScannerScreen(){
                                             ? "Protein: N/A"
                                             : `Protein: ${calculatedProtein.toFixed(0)}g`}
                                     </Text>
+
+                                    {[
+                                        {
+                                            label: "Carbohydrates",
+                                            value: extraNutrition.carbs,
+                                            unit: "g",
+                                        },
+                                        {
+                                            label: "Fat",
+                                            value: extraNutrition.fat,
+                                            unit: "g",
+                                        },
+                                        {
+                                            label: "Sugar",
+                                            value: extraNutrition.sugar,
+                                            unit: "g",
+                                        },
+                                        {
+                                            label: "Fiber",
+                                            value: extraNutrition.fiber,
+                                            unit: "g",
+                                        },
+                                        {
+                                            label: "Sodium",
+                                            value: extraNutrition.sodium_mg,
+                                            unit: "mg",
+                                        },
+                                    ].map((nutrient)=> (
+                                        <Text key={nutrient.label} style={styles.nutritionValue}>
+                                            {nutrient.label}:{" "}
+                                            {nutrient.value === null
+                                                ? "N/A" : `${Number(nutrient.value.toFixed(1))} ${nutrient.unit}`
+                                            }
+                                        </Text>
+                                    ))}
                                 </View>
 
                                 <TouchableOpacity

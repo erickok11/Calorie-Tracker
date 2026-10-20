@@ -89,8 +89,34 @@ export default function LogRecentFoodScreen() {
       ? convertAmount(Number(amount), selectedUnit, food.unit as FoodUnit) : null;
 
   const nutrition = 
-    hasServingInfo ? calculateNutrition(food.amount!, food.calories, food.protein, convertedAmount ?? 0)
+    hasServingInfo 
+      ? calculateNutrition(food.amount!, food.calories, food.protein, convertedAmount ?? 0)
       : {calories: food.calories, protein: food.protein};
+
+  const servingRatio = hasServingInfo
+    ? convertedAmount !== null &&
+      Number.isFinite(convertedAmount) && 
+      convertedAmount > 0
+        ? convertedAmount / food.amount! : 0 : 1;
+  
+  const scaleOptionalNutrient = (
+    value: number | null | undefined
+  ): number | null => {
+    if(value == null){
+      return null;
+    }
+
+    return value * servingRatio;
+  };
+
+  const extraNutrition = {
+    carbs: scaleOptionalNutrient(food.carbs),
+    fat: scaleOptionalNutrient(food.fat),
+    sugar: scaleOptionalNutrient(food.sugar),
+    fiber: scaleOptionalNutrient(food.fiber),
+    sodium_mg: scaleOptionalNutrient(food.sodium_mg),
+  };
+
 
   const consumedAmount = Number(amount);
 
@@ -127,6 +153,7 @@ export default function LogRecentFoodScreen() {
         unit: hasServingInfo ? selectedUnit : undefined,
         calories: nutrition.calories,
         protein: nutrition.protein,
+        ...extraNutrition,
       });
 
       Keyboard.dismiss();
@@ -165,6 +192,20 @@ export default function LogRecentFoodScreen() {
               {food.calories} kcal · {food.protein}g protein
             </Text>
 
+            {[
+              { label: "Carbs", value: extraNutrition.carbs, unit: "g"},
+              { label: "Fat", value: extraNutrition.fat, unit: "g"},
+              { label: "Sugar", value: extraNutrition.sugar, unit: "g"},
+              { label: "Fiber", value: extraNutrition.fiber, unit: "g"},
+              { label: "Sodium", value: extraNutrition.sodium_mg, unit: "mg"},
+            ].map((nutrient) => (
+              <Text key = {nutrient.label} style={styles.resultValue}>
+                {nutrient.label}: {" "}
+                {nutrient.value === null
+                  ? "N/A" : `${Number(nutrient.value.toFixed(1))} ${nutrient.unit}`}
+              </Text>
+            ))}
+
             <View style={styles.amountRow}>
               <TextInput
                 style={styles.input}
@@ -188,7 +229,7 @@ export default function LogRecentFoodScreen() {
           </>
         ) : (
           <Text style={styles.reference}>
-            No serving amount recorderd. Original nutrition will be used.
+            No serving amount recorded. Original nutrition will be used.
           </Text>
         )}
 

@@ -3,10 +3,17 @@ export type BarcodeProduct = {
     name: string;
     brand: string | null;
     servingSize: string | null;
+
     caloriesPer100g: number | null;
     proteinPer100g: number | null;
     caloriesPerServing: number | null;
     proteinPerServing: number | null;
+
+    carbsPerServing: number | null;
+    fatPerServing: number | null;
+    sugarPerServing: number | null;
+    fiberPerServing: number | null;
+    sodiumMgPerServing: number | null;
 };
 
 type OpenFoodFactsResponse = {
@@ -19,6 +26,21 @@ type OpenFoodFactsResponse = {
             proteins_100g?: number;
             "energy-kcal_serving"?: number;
             proteins_serving?: number;
+
+            carbohydrates_100g?:number;
+            carbohydrates_serving?:number;
+
+            fat_100g?:number;
+            fat_serving?:number;
+
+            sugars_100g?:number;
+            sugars_serving?:number;
+            
+            fiber_100g?: number;
+            fiber_serving?: number;
+
+            sodium_100g?: number;
+            sodium_serving?: number;
         };
         serving_quantity?: number | string;
         serving_quantity_unit?: string;
@@ -63,11 +85,57 @@ export async function getProductByBarcode(
 
     const multiplier = hasValidServing ? servingQuantity / 100 : null;
 
-    const caloriesPerServing = nutrients?.["energy-kcal_serving"] ??
-                                (multiplier !== null && nutrients?.["energy-kcal_100g"] != null ? nutrients["energy-kcal_100g"] * multiplier : null);
+    const getPerServing = (
+        perServing: number | undefined,
+        per100g: number | undefined
+    ): number | null => {
+        if(perServing != null && Number.isFinite(perServing)) {
+            return perServing;
+        }
 
-    const proteinPerServing = nutrients?.proteins_serving ?? (multiplier !== null && nutrients?.proteins_100g != null ? nutrients.proteins_100g * multiplier : null);
-    
+        if( multiplier !== null && per100g != null && Number.isFinite(per100g)){
+            return per100g * multiplier;
+        }
+
+        return null;
+    };
+
+    const caloriesPerServing = getPerServing(
+        nutrients?.["energy-kcal_serving"],
+        nutrients?.["energy-kcal_100g"]
+    );
+
+    const proteinPerServing = getPerServing(
+        nutrients?.proteins_serving,
+        nutrients?.proteins_100g
+    );
+
+    const carbsPerServing = getPerServing(
+        nutrients?.carbohydrates_serving,
+        nutrients?.carbohydrates_100g,
+    );
+
+    const fatPerServing = getPerServing(
+        nutrients?.fat_serving,
+        nutrients?.fat_100g,
+    );
+
+    const sugarPerServing = getPerServing(
+        nutrients?.sugars_serving,
+        nutrients?.sugars_100g,
+    );
+
+    const fiberPerServing = getPerServing(
+        nutrients?.fiber_serving,
+        nutrients?.fiber_100g,
+    );
+
+    const sodiumGramsPerServing = getPerServing(
+        nutrients?.sodium_serving,
+        nutrients?.sodium_100g,
+    );
+
+    const sodiumMgPerServing = sodiumGramsPerServing === null ? null : sodiumGramsPerServing * 1000;
 
     return {
         barcode,
@@ -80,5 +148,10 @@ export async function getProductByBarcode(
             nutrients?.proteins_100g ?? null,
         caloriesPerServing,
         proteinPerServing,
+        carbsPerServing,
+        fatPerServing,
+        sugarPerServing,
+        fiberPerServing,
+        sodiumMgPerServing,
     };
 }

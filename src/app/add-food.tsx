@@ -37,6 +37,12 @@ export default function AddFoodScreen() {
     const [unit, setUnit] = useState<FoodUnit | undefined> (undefined);
     const [calories, setCalories] = useState("");
     const [protein, setProtein] = useState("");
+    const [carbs, setCarbs] = useState("");
+    const [fat, setFat] = useState("");
+    const [sugar, setSugar] = useState("");
+    const [fiber, setFiber] = useState("");
+    const [sodium, setSodium] = useState("");
+
     const [savedFoods, setSavedFoods] = useState<SavedFoodRow[]>([]);
     const [saveForLater, setSaveForLater ] = useState(false);
 
@@ -49,10 +55,27 @@ export default function AddFoodScreen() {
         loadSavedFoods();
     }, []);
 
+    const parseOptionalNumber = (
+        value: string
+    ): number | null => {
+        if(value.trim() === "") {
+            return null;
+        }
+
+        return Number(value);
+    };
+
     const handleAddFood =  async () => {
         const amountNumber = amount.trim() === "" ? undefined : Number(amount);
         const calorieNumber = Number(calories);
         const proteinNumber = Number(protein);
+        const nutrients = {
+            carbs: parseOptionalNumber(carbs),
+            fat: parseOptionalNumber(fat),
+            sugar: parseOptionalNumber(sugar),
+            fiber: parseOptionalNumber(fiber),
+            sodium_mg: parseOptionalNumber(sodium),
+        }
 
         if(
             name.trim() === "" ||
@@ -68,8 +91,11 @@ export default function AddFoodScreen() {
 
         if(
             (amountNumber !== undefined && amountNumber <= 0) ||
-            calorieNumber < 0 ||
-            proteinNumber < 0
+            calorieNumber < 0 || !Number.isFinite(calorieNumber) ||
+            proteinNumber < 0 || !Number.isFinite(proteinNumber) ||
+            Object.values(nutrients).some(
+                (value) => value !== null && (!Number.isFinite(value) || value < 0)
+            )
         ) {
             Alert.alert("Invalid values", "Please enter valid numbers.");
             return;
@@ -88,8 +114,12 @@ export default function AddFoodScreen() {
                 name.trim(),
                 Number(amount),
                 unit!,
-                Number(calories),
-                Number(protein)
+                calorieNumber,
+                proteinNumber,
+                null,
+                null,
+                nutrients
+
             );
         }
 
@@ -99,6 +129,7 @@ export default function AddFoodScreen() {
             unit,
             calories: calorieNumber,
             protein: proteinNumber,
+            ...nutrients,
         });
 
         router.back();
@@ -209,6 +240,66 @@ export default function AddFoodScreen() {
                             keyboardType="decimal-pad"
                         />
                         <Text style={styles.suffix}>g</Text>
+                    </View>
+
+                    <Text style={styles.label}>Carbohydrates (Optional)</Text>
+                    <View style={styles.numberContainer}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="0"
+                            value={carbs}
+                            onChangeText={setCarbs}
+                            keyboardType="decimal-pad"
+                        />
+                        <Text style={styles.suffix}>g</Text>
+                    </View>
+
+                    <Text style={styles.label}>Fat (Optional)</Text>
+                    <View style={styles.numberContainer}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="0"
+                            value={fat}
+                            onChangeText={setFat}
+                            keyboardType="decimal-pad"
+                        />
+                        <Text style={styles.suffix}>g</Text>
+                    </View>
+
+                    <Text style={styles.label}>Sugar (Optional)</Text>
+                    <View style={styles.numberContainer}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="0"
+                            value={sugar}
+                            onChangeText={setSugar}
+                            keyboardType="decimal-pad"
+                        />
+                        <Text style={styles.suffix}>g</Text>
+                    </View>
+
+                    <Text style={styles.label}>Fiber (Optional)</Text>
+                    <View style={styles.numberContainer}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="0"
+                            value={fiber}
+                            onChangeText={setFiber}
+                            keyboardType="decimal-pad"
+                        />
+                        <Text style={styles.suffix}>g</Text>
+                    </View>
+
+                    <Text style={styles.label}>Sodium (Optional)</Text>
+                    <View style={styles.numberContainer}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="0"
+                            value={sodium}
+                            onChangeText={setSodium}
+                            keyboardType="decimal-pad"
+                        />
+                        <Text style={styles.suffix}>mg</Text>
                     </View>
 
                     <View style={styles.saveFoodRow}>

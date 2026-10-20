@@ -20,6 +20,14 @@ import { FoodUnit } from "@/constants/unit";
 
 import UnitPicker from "@/components/UnitPicker";
 
+function parseOptionalNumber(value: string): number | null {
+    if(value.trim() === ""){
+        return null;
+    }
+
+    return Number(value);
+}
+
 export default function EditFoodScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
 
@@ -31,13 +39,38 @@ export default function EditFoodScreen() {
     const [amount, setAmount] = useState(
         food?.amount?.toString() ?? ""
     );
-    const [unit, setUnit] = useState<FoodUnit | undefined>(undefined);
+    
+    const [unit, setUnit] = useState<FoodUnit | undefined>(
+        food?.unit ? (food.unit as FoodUnit) : undefined
+    );
+
     const [calories, setCalories] = useState(
         food?.calories.toString() ?? ""
     );
+
     const [protein, setProtein] = useState(
         food?.protein.toString() ?? ""
-    )
+    );
+
+    const [carbs, setCarbs] = useState(
+        food?.carbs?.toString() ?? ""
+    );
+
+    const [fat, setFat] = useState(
+        food?.fat?.toString() ?? ""
+    );
+
+    const [sugar, setSugar] = useState(
+        food?.sugar?.toString() ?? ""   
+    );
+
+    const [fiber, setFiber] = useState(
+        food?.fiber?.toString() ?? ""
+    );
+
+    const [sodium, setSodium] = useState(
+        food?.sodium_mg?.toString() ?? ""
+    );
 
     if (!food) {
         return (
@@ -54,6 +87,14 @@ export default function EditFoodScreen() {
         const calorieNum = Number(calories);
         const proteinNum = Number(protein);
 
+        const nutrients = {
+            carbs: parseOptionalNumber(carbs),
+            fat: parseOptionalNumber(fat),
+            sugar: parseOptionalNumber(sugar),
+            fiber: parseOptionalNumber(fiber),
+            sodium_mg: parseOptionalNumber(sodium),
+        };
+
         if(
             name.trim() === "" ||
             calories.trim() === "" ||
@@ -69,8 +110,11 @@ export default function EditFoodScreen() {
 
         if (
             (amountNumber !== undefined && amountNumber <= 0) ||
-            calorieNum < 0 ||
-            proteinNum < 0
+            calorieNum < 0 || !Number.isFinite(calorieNum) ||
+            proteinNum < 0 || !Number.isFinite(proteinNum) ||
+            Object.values(nutrients).some(
+                (value) => value !== null && (!Number.isFinite(value) || value < 0)
+            )
         )
         {
             Alert.alert(
@@ -87,6 +131,7 @@ export default function EditFoodScreen() {
             unit: amountNumber === undefined ? undefined : unit,
             calories: calorieNum,
             protein: proteinNum,
+            ...nutrients,
         });
 
         router.back();
@@ -165,6 +210,54 @@ export default function EditFoodScreen() {
 
                         <Text style={styles.suffix}>g</Text>
                     </View>
+
+                    {[
+                        {
+                            label: "Carbohydrates (Optional)",
+                            value: carbs,
+                            onChangeText: setCarbs,
+                            unit: "g",
+                        },
+                        {
+                            label: "Fat (Optional)",
+                            value: fat,
+                            onChangeText: setFat,
+                            unit: "g",
+                        },
+                        {
+                            label: "Sugar (Optional)",
+                            value: sugar,
+                            onChangeText: setSugar,
+                            unit: "g",
+                        },
+                        {
+                            label: "Fiber (Optional)",
+                            value: fiber,
+                            onChangeText: setFiber,
+                            unit: "g"
+                        },
+                        {
+                            label: "Sodium (Optional)",
+                            value: sodium,
+                            onChangeText: setSodium,
+                            unit: "mg"
+                        },
+                    ].map((field)=> (
+                        <View key={field.label}>
+                            <Text style={styles.label}>{field.label}</Text>
+                            <View style={styles.numberContainer}>
+                                <TextInput
+                                    style={styles.numberInput}
+                                    value={field.value}
+                                    onChangeText={field.onChangeText}
+                                    keyboardType="decimal-pad"
+                                    placeholder="Optional"
+                                />
+
+                                <Text style={styles.suffix}>{field.unit}</Text>
+                            </View>
+                        </View>
+                    ))}
 
                     <TouchableOpacity
                         style={styles.saveButton}

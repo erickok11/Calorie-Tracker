@@ -22,6 +22,14 @@ import UnitPicker from "@/components/UnitPicker";
 
 import type { FoodUnit } from "@/constants/unit";
 
+function parseOptionalNumber(value:string): number | null {
+    if (value.trim() === ""){
+        return null;
+    }
+
+    return Number(value);
+}
+
 export default function EditSavedFoodScreen() {
     const router = useRouter();
     const {id} = useLocalSearchParams<{ id:string }>();
@@ -35,6 +43,11 @@ export default function EditSavedFoodScreen() {
     const [unit, setUnit] = useState<FoodUnit | undefined>(undefined);
     const [calories, setCalories] = useState("");
     const [protein, setProtein] = useState("");
+    const [carbs, setCarbs] = useState("");
+    const [fat, setFat] = useState("");
+    const [sugar, setSugar] = useState("");
+    const [fiber, setFiber] = useState("");
+    const [sodium, setSodium] = useState("");
 
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -64,6 +77,12 @@ export default function EditSavedFoodScreen() {
                 setUnit(food.serving_unit as FoodUnit);
                 setCalories(food.calories.toString());
                 setProtein(food.protein.toString());
+                setCarbs(food.carbs?.toString() ?? "");
+                setFat(food.fat?.toString() ?? "");
+                setSugar(food.sugar?.toString() ?? "");
+                setFiber(food.fiber?.toString() ?? "");
+                setSodium(food.sodium_mg?.toString() ?? "");
+
             } catch (error) {
                 console.error("Failed to load saved food:", error);
 
@@ -85,6 +104,14 @@ export default function EditSavedFoodScreen() {
         const calorieValue = Number(calories);
         const proteinValue = Number(protein);
 
+        const nutrients = {
+            carbs: parseOptionalNumber(carbs),
+            fat: parseOptionalNumber(fat),
+            sugar: parseOptionalNumber(sugar),
+            fiber: parseOptionalNumber(fiber),
+            sodium_mg: parseOptionalNumber(sodium),
+        };
+
         if (!name.trim()) {
             Alert.alert("Invalid name", "Please enter a food name.");
             return;
@@ -103,6 +130,30 @@ export default function EditSavedFoodScreen() {
             return;
         }
 
+        if (
+            calories.trim() === "" ||
+            protein.trim() === ""
+        ) {
+            Alert.alert(
+                "Missing Information",
+                "Calories and Protein are required."
+            );
+            return;
+        }
+
+        if (
+            !Number.isFinite(calorieValue) || calorieValue < 0 ||
+            !Number.isFinite(proteinValue) || proteinValue < 0 ||
+            Object.values(nutrients).some(
+                (value) => value !== null && (!Number.isFinite(value) || value < 0)
+            )
+        ) {
+            Alert.alert(
+                "Invalid nutrition",
+                "Please enter valid, non-negative nutrition values."
+            );
+            return;
+        }
         if (isSaving) return;
 
         setIsSaving(true);
@@ -114,6 +165,7 @@ export default function EditSavedFoodScreen() {
                 serving_unit: unit,
                 calories: calorieValue,
                 protein: proteinValue,
+                ...nutrients,
             });
 
             Keyboard.dismiss();
@@ -134,10 +186,19 @@ export default function EditSavedFoodScreen() {
     if (loading) {
         return (
             <SafeAreaView style={styles.container}>
-                <TouchableOpacity onPress={() => router.back()}>
+                <ActivityIndicator size="large" />
+            </SafeAreaView>
+        );
+    }
+
+    if(notFound) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <TouchableOpacity onPress={()=> router.back()}>
                     <Text style={styles.backButton}>‹ Back</Text>
                 </TouchableOpacity>
-                <Text>Saved food not found.</Text>
+
+                <Text>Food not found</Text>
             </SafeAreaView>
         );
     }
@@ -200,6 +261,14 @@ export default function EditSavedFoodScreen() {
                 keyboardDismissMode="on-drag"
             >
                 <Text style={styles.label}>Food Name</Text>
+                <TextInput
+                    style={styles.input}
+                    value={name}
+                    onChangeText={setName}
+                    placeholder="Food name"
+                />
+                
+                <Text style={styles.label}>Serving Amount</Text>
                 <View style={styles.amountRow}>
                     <TextInput
                         style={[styles.input, styles.amountInput]}
@@ -235,6 +304,50 @@ export default function EditSavedFoodScreen() {
                     keyboardType="decimal-pad"
                     placeholder="Protein"
                 />
+
+                {[
+                    {
+                        label: "Carbohydrates (g)",
+                        value: carbs,
+                        setValue: setCarbs,
+                    },
+                    {
+                        label: "Fat (g)",
+                        value: fat,
+                        setValue: setFat,
+                    },
+                    {
+                        label: "Sugar (g)",
+                        value: sugar,
+                        setValue: setSugar,
+                    },
+                    {
+                        label: "Fiber (g)",
+                        value: fiber,
+                        setValue: setFiber,
+                    },
+                    {
+                        label: "Sodium (mg)",
+                        value: sodium,
+                        setValue: setSodium,
+                    },
+                ].map((field) => (
+                    <View key={field.label}>
+                        <Text style={styles.label}>
+                            {field.label} (Optional)
+                        </Text>
+
+                        <TextInput
+                            style={styles.input}
+                            value={field.value}
+                            onChangeText={field.setValue}
+                            keyboardType="decimal-pad"
+                            placeholder="Optional"
+                        />
+                    </View>
+
+                ))}
+
 
                 <TouchableOpacity
                     style={[

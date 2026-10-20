@@ -92,12 +92,35 @@ export default function LogSavedFoodScreen() {
         convertedAmount ?? 0
     );
 
+    const servingRatio = convertedAmount !== null && food.serving_amount > 0
+                                                    ? convertedAmount / food.serving_amount : 0;
+
+    const scaleOptionalNutrient = (
+        value: number | null
+    ) : number | null => {
+        if (value === null){
+            return null;
+        }
+
+        return value * servingRatio;
+    }
+
+    const extraNutrition = {
+        carbs: scaleOptionalNutrient(food.carbs),
+        fat: scaleOptionalNutrient(food.fat),
+        sugar: scaleOptionalNutrient(food.sugar),
+        fiber: scaleOptionalNutrient(food.fiber),
+        sodium_mg: scaleOptionalNutrient(food.sodium_mg),
+    }
+
     const canAdd = 
         amount.trim() !== "" &&
         Number.isFinite(Number(amount)) &&
         Number(amount) > 0 &&
         selectedUnit !== undefined &&
-        convertedAmount !== null;
+        convertedAmount !== null &&
+        Number.isFinite(convertedAmount) &&
+        food.serving_amount > 0;
 
     const handleAddToToday = async () => {
         const consumedAmount = Number(amount);
@@ -110,7 +133,7 @@ export default function LogSavedFoodScreen() {
             return;
         }
 
-        if (!selectedUnit || convertAmount === null) {
+        if (!selectedUnit || convertAmount === null || !Number.isFinite(convertedAmount) || food.serving_amount <= 0) {
             Alert.alert(
                 "Invalid unit",
                 "Please select a compatible unit."
@@ -125,6 +148,7 @@ export default function LogSavedFoodScreen() {
                 unit: selectedUnit,
                 calories: nutrition.calories,
                 protein: nutrition.protein,
+                ...extraNutrition,
             });
 
             router.replace("/(drawer)");
@@ -214,6 +238,20 @@ export default function LogSavedFoodScreen() {
                         <Text style={styles.resultValue}>
                             {nutrition.protein.toFixed(1)}g protein
                         </Text>
+
+                        {[
+                            { label: "Carbs", value: extraNutrition.carbs, unit: "g" },
+                            { label: "Fat", value: extraNutrition.fat, unit: "g"},
+                            { label: "Sugar", value: extraNutrition.sugar, unit: "g"},
+                            { label: "Fiber", value: extraNutrition.fiber, unit: "g"},
+                            { label: "Sodium", value: extraNutrition.sodium_mg, unit: "mg"},
+                        ].map((nutrient) => (
+                            <Text key={nutrient.label} style={styles.resultValue}>
+                                {nutrient.label}: {" "}
+                                {nutrient.value === null
+                                    ? "N/A" : `${Number(nutrient.value.toFixed(1))} ${nutrient.unit}`}
+                            </Text>
+                        ))}
 
                         {food.serving_description && (
                             <Text style={styles.reference}>

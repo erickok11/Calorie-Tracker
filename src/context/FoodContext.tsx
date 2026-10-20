@@ -4,6 +4,7 @@ import {
     getLocalDate,
     insertFood,
     updateFoodById,
+    ExtraNutritionInput,
 } from "@/database/database";
 
 import {
@@ -21,7 +22,7 @@ export type Food = {
     unit?: string;
     calories: number;
     protein: number;
-};
+} & ExtraNutritionInput;
 
 type FoodContextType = {
     foods: Food[];
@@ -54,6 +55,11 @@ export function FoodProvider({
                 unit: food.unit ?? undefined,
                 calories: food.calories,
                 protein: food.protein,
+                carbs: food.carbs,
+                fat: food.fat,
+                sugar: food.sugar,
+                fiber: food.fiber,
+                sodium_mg: food.sodium_mg,
             }));
 
             setFoods(formattedFoods);
@@ -71,7 +77,14 @@ export function FoodProvider({
             food.unit,
             food.calories,
             food.protein,
-            today
+            today,
+            {
+                carbs: food.carbs,
+                fat: food.fat,
+                sugar: food.sugar,
+                fiber: food.fiber,
+                sodium_mg: food.sodium_mg,
+            }
         );
 
         const newFood: Food = {
@@ -94,19 +107,37 @@ export function FoodProvider({
     };
 
     const updateFood = async (updatedFood: Food) => {
+        const existingFood = foods.find(
+            (food) => food.id === updatedFood.id
+        );
+        
+        const mergedFood: Food = {
+            ...existingFood,
+            ...updatedFood,
+        };
+
+
         await updateFoodById(
-            Number(updatedFood.id),
-            updatedFood.name,
-            updatedFood.amount,
-            updatedFood.unit,
-            updatedFood.calories,
-            updatedFood.protein
+            Number(mergedFood.id),
+            mergedFood.name,
+            mergedFood.amount,
+            mergedFood.unit,
+            mergedFood.calories,
+            mergedFood.protein,
+            {
+                carbs: mergedFood.carbs,
+                fat: mergedFood.fat,
+                sugar: mergedFood.sugar,
+                fiber: mergedFood.fiber,
+                sodium_mg: mergedFood.sodium_mg,
+            }
+            
         );
 
         setFoods((currentFoods) => 
             currentFoods.map((food) =>
                 food.id === updatedFood.id
-                ? updatedFood
+                ? { ...food, ...updatedFood }
                 : food
             )
         );
