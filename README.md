@@ -12,6 +12,10 @@ set personalized nutrition goals, and review their progress over time.
 - Track daily progress using circular calorie and protein indicators
 - Customize daily calorie and protein goals
 - Edit and delete logged foods
+- Carbonhydrates and fat tracking
+- Sugar, fiber, and sodium information
+- Expanded nutrition sumamries
+- Additional nutrition goals
 
 ### Food History
 - View previous food logs using a monthly calendar
@@ -26,7 +30,7 @@ set personalized nutrition goals, and review their progress over time.
 - Adjust serving quantities with automatic nutrition calculations
 - Convert between compatible measurement units.
 
-### Barcode Scanning - New in v0.4.0
+### Barcode Scanning
 - Scan packaged food barcodes using iPhone camera
 - Retrieve food information from Open Food Facts
 - Display product names, serving sizes, calories, and protein
@@ -47,10 +51,6 @@ Feedback and bug reports are greatly appreciated
 ## Roadmap
 
 ### Future
-- Carbonhydrates and fat tracking
-- Sugar, fiber, and sodium information
-- Expanded nutrition sumamries
-- Additional nutrition goals
 - Photo-based food analysis
 - Detailed historical food logs
 - Personalized goals with ai
