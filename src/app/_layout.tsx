@@ -8,6 +8,7 @@ import { FoodProvider } from '@/context/FoodContext';
 import { GoalsProvider } from '@/context/GoalsContext';
 
 import { Stack } from "expo-router";
+
 SplashScreen.preventAutoHideAsync();
 
 export default function TabLayout() {

@@ -21,16 +21,132 @@ import {
   useGoal,
 } from "@/context/GoalsContext";
 
-import { useNavigation } from "expo-router";
+import { useNavigation, useFocusEffect } from "expo-router";
 import { DrawerActions } from "expo-router/react-navigation";
+
+import { useCallback, useState } from "react";
+import {
+  getDashboardNutrientSettings,
+  type DashboardNutrient,
+  type DashboardNutrientSetting,
+} from "@/database/database";
+
+const EXTRA_NUTRIENTS: {
+  key: DashboardNutrient;
+  label: string;
+  unit: string;
+  color: string;
+  isLimit: boolean;
+}[] = [
+  {
+    key: "carbs",
+    label: "Carbs",
+    unit: "g",
+    color: "#D89B36",
+    isLimit: false,
+  },
+  {
+    key: "fat",
+    label: "Fat",
+    unit: "g",
+    color: "#A480DA",
+    isLimit: false,
+  },
+  {
+    key: "sugar",
+    label: "Sugar",
+    unit: "g",
+    color: "#DA7993",
+    isLimit: true,
+  },
+  {
+    key: "fiber",
+    label: "Fiber",
+    unit: "g",
+    color: "#36A781",
+    isLimit: false,
+  },
+  {
+    key: "sodium_mg",
+    label: "Sodium",
+    unit: "mg",
+    color: "#7895BF",
+    isLimit: true,
+  },
+]
 
 export default function HomeScreen() {
   const {calorieGoal, proteinGoal} = useGoal();
 
   const { foods } = useFood();
 
+  const [dashboardSettings, setDashboardSettings] = useState<DashboardNutrientSetting[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+
+      const loadDashboardSettings = async () => {
+        try {
+          const settings = await getDashboardNutrientSettings();
+
+          if(active) {
+            setDashboardSettings(settings);
+          }
+        } catch(error) {
+          console.error(
+            "Failed to load dashboard settings:",
+            error
+          );
+        }
+      };
+      void loadDashboardSettings();
+
+      return () => {
+        active = false;
+      };
+    }, [])
+  );
+
   const totalCalories = calculateTotalCalories(foods);
   const totalProtein = calculateTotalProtein(foods);
+
+  const extraRings = EXTRA_NUTRIENTS.flatMap((nutrient) => {
+    const setting = dashboardSettings.find(
+      (item) => item.nutrient === nutrient.key
+    );
+
+    if (!setting || setting.is_visible !== 1){
+      return [];
+    }
+
+    const values = foods.map(
+      (food) => food[nutrient.key]
+    )
+
+    const knownValues = values.filter(
+      (value): value is number =>
+          typeof value === "number" &&
+          Number.isFinite(value)
+    );
+
+    const total = knownValues.reduce(
+      (sum,value) => sum + value, 0
+    );
+
+    const missingCount = foods.length - knownValues.length;
+
+    return [
+      {
+        ...nutrient,
+        total,
+        goal: setting.goal,
+        missingCount,
+        hasData:
+          foods.length === 0 || knownValues.length > 0,
+      },
+    ];
+  });
 
   const navigation = useNavigation();
 
@@ -84,7 +200,69 @@ export default function HomeScreen() {
             </Text>
           </View>
         </View>
+        
+        {extraRings.length > 0 && (
+          <View style={styles.extraSection}>
+            <Text style={styles.extraTitle}>
+              ADDITIONAL NUTRITION
+            </Text>
 
+            <View style={styles.extraGrid}>
+              {extraRings.map((nutrient) => {
+                const hasGoal = 
+                  nutrient.goal !== null &&
+                  Number.isFinite(nutrient.goal) &&
+                  nutrient.goal > 0;
+
+                const overLimit = hasGoal && nutrient.isLimit && nutrient.goal !== null && nutrient.total > nutrient.goal;
+
+                return(
+                  <View 
+                    key={nutrient.key}
+                    style={styles.extraCard}
+                  >
+                    <Text style={styles.extraLabel}>
+                      {nutrient.label}
+                    </Text>
+
+                    {hasGoal && nutrient.hasData  && nutrient.goal !== null ? (
+                      <ProgressCircle
+                        value={nutrient.total}
+                        goal={nutrient.goal}
+                        unit={nutrient.unit}
+                        size={78}
+                        compact
+                        color={
+                          overLimit ? "#D9534F" : nutrient.color
+                        }
+                      />
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.extraPlaceholder}
+                        disabled={hasGoal}
+                        onPress={() => router.push("/(drawer)/settings")}
+                      >
+                        <Text style={styles.placeholderText}>
+                          {hasGoal ? "N/A" : "Set goal"}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+
+                    <Text style={styles.extraValues}>
+                      {!hasGoal ? "No goal set" : !nutrient.hasData ? `N/A / ${nutrient.goal} ${nutrient.unit}`
+                        : `${Number(nutrient.total.toFixed(1))} / ${nutrient.goal} ${nutrient.unit}`}
+                    </Text>
+
+                    <Text style={styles.extraNote}>
+                      {nutrient.missingCount > 0 ? "Partial data" : !hasGoal ? "Configure in Settings" 
+                        : overLimit ? "Over limit" : nutrient.isLimit ? "Daily Limit" : "Daily Goal"}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
         <Text style={styles.foodTitle}>TODAY'S FOOD</Text>
 
         {foods.map((food) => (
@@ -327,4 +505,68 @@ const styles = StyleSheet.create({
     width: 44,
   },
 
+
+  extraSection: {
+    marginBottom: 28,
+  },
+
+  extraTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#777",
+    marginBottom: 14,
+  },
+
+  extraGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    rowGap: 12,
+  },
+
+  extraCard: {
+    width: "31%",
+    backgroundColor: "white",
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 4,
+    alignItems: "center",
+    minHeight: 154,
+  },
+
+  extraLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+
+  extraValues: {
+    fontSize: 11,
+    color: "#555",
+    marginTop: 9,
+    textAlign: "center",
+  },
+
+  extraNote: {
+    fontSize: 10,
+    color: "#888",
+    marginTop: 5,
+    textAlign: "center",
+  },
+
+  extraPlaceholder: {
+    width: 78,
+    height: 78,
+    borderRadius: 39,
+    backgroundColor: "#F0F0F0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  placeholderText: {
+    color: "#777",
+    fontSize: 12,
+    fontWeight: "600",
+  },
 });

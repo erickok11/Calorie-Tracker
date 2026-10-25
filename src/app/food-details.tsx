@@ -4,6 +4,7 @@ import {
     Text,
     TouchableOpacity,
     View,
+    ScrollView,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -48,9 +49,60 @@ export default function FoodDetailsScreen() {
         );
     };
 
+    const nutritionRows = [
+        {
+            label: "Calories",
+            value: food.calories,
+            unit: "kcal",
+        },
+        {
+            label: "Protein",
+            value: food.protein,
+            unit: "g",
+        },
+        {
+            label: "Carbohydrates",
+            value: food.carbs,
+            unit: "g",
+        },
+        {
+            label: "Fat",
+            value: food.fat,
+            unit: "g",
+        },
+        {
+            label: "Sugar",
+            value: food.sugar,
+            unit: "g",
+        },
+        {
+            label: "Fiber",
+            value: food.fiber,
+            unit: "g",
+        },
+        {
+            label: "Sodium",
+            value: food.sodium_mg,
+            unit: "mg",
+        },
+    ];
+
+    const formatNutrition = (
+        value: number | null | undefined,
+        unit: string
+    ): string => {
+        if(value == null || !Number.isFinite(value)) {
+            return "N/A";
+        }
+        return `${Number(value.toFixed(1))} ${unit}`;
+    };
+
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.content}>
+            <ScrollView 
+                contentContainerStyle={styles.content}
+                keyboardShouldPersistTaps="handled"
+            >
                 
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => router.back()}>
@@ -73,23 +125,26 @@ export default function FoodDetailsScreen() {
                 </View>
 
                 <View style={styles.nutritionCard}>
-                    <View style={styles.nutritionRow}>
-                        <Text style={styles.label}>Calories</Text>
+                    {nutritionRows.map((nutrient, index) => (
+                        <View key={nutrient.label}>
+                            {index > 0 && (
+                                <View style={styles.divider} />
+                            )}
 
-                        <Text style={styles.value}>
-                            {food.calories} kcal
-                        </Text>
-                    </View>
+                            <View style={styles.nutritionRow}>
+                                <Text style={styles.label}>
+                                    {nutrient.label}
+                                </Text>
 
-                    <View style={styles.divider} />
-
-                    <View style={styles.nutritionRow}>
-                        <Text style={styles.label}>Protein</Text>
-
-                        <Text style={styles.value}>
-                            {food.protein} g
-                        </Text>
-                    </View>
+                                <Text style={styles.value}>
+                                    {formatNutrition(
+                                        nutrient.value,
+                                        nutrient.unit
+                                    )}
+                                </Text>
+                            </View>
+                        </View>
+                    ))}
                 </View>
 
                 <TouchableOpacity
@@ -114,7 +169,7 @@ export default function FoodDetailsScreen() {
                 </TouchableOpacity>
 
                 
-            </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }

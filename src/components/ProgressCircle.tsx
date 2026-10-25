@@ -6,20 +6,31 @@ type ProgressCircleProps = {
     value: number;
     goal: number;
     unit?: string;
+    size?: number;
+    color?: string;
+    compact?: boolean;
 };
 
 export default function ProgressCircle({
     value,
     goal,
     unit = "",
+    size = 120,
+    color = "#3478F6",
+    compact = false,
 }: ProgressCircleProps){
-    const size = 120;
     const strokeWidth = 10;
 
     const radius = (size - strokeWidth) /2;
     const circumference = 2 * Math.PI * radius;
 
-    const progress = calculateProgress(value, goal);
+    const validGoal = Number.isFinite(goal) && goal > 0;
+    const validValue = Number.isFinite(value) && value >= 0;
+
+    const progress = validGoal && validValue 
+                        ? Math.min(Math.max(calculateProgress(value,goal), 0), 1) : 0;
+    
+    const percentage = validGoal && validValue ? Math.round((value/goal) * 100) : 0;
 
     const strokeDashoffset = circumference * (1 - progress);
 
@@ -41,7 +52,7 @@ export default function ProgressCircle({
                     cx={size/2}
                     cy={size/2}
                     r={radius}
-                    stroke="#3478F6"
+                    stroke={color}
                     strokeWidth={strokeWidth}
                     fill="none"
                     strokeDasharray={circumference}
@@ -53,15 +64,25 @@ export default function ProgressCircle({
             </Svg>
             
             <View style={styles.textContainer}>
-                <Text style={styles.value}>
-                    {value}
-                    {unit}
-                </Text>
+                {compact ? (
+                    <Text style={styles.compactValue}>
+                        {percentage}%
+                    </Text>
+                ):
+                <>
+                    <Text style={styles.value}>
+                        {value}
+                        {unit}
+                    </Text>
 
-                <Text style={styles.goal}>
-                    / {goal}
-                    {unit}
-                </Text>
+                    <Text style={styles.goal}>
+                        / {goal}
+                        {unit}
+                    </Text>
+                </>
+                
+                }
+                
             </View>
         </View>
     )
@@ -91,4 +112,9 @@ const styles = StyleSheet.create({
         color: "#777",
         marginTop: 2,
     },
+
+    compactValue: {
+        fontSize: 15,
+        fontWeight: "700",
+    }
 });

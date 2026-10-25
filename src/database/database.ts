@@ -13,6 +13,23 @@ export type ExtraNutrition = {
     sodium_mg: number | null;
 }
 
+export type DashboardNutrient = 
+    | "carbs" 
+    | "fat" 
+    | "sugar" 
+    | "fiber" 
+    | "sodium_mg" ;
+
+export type DashboardNutrientSetting = {
+    nutrient: DashboardNutrient;
+    is_visible: number;
+    goal: number | null;
+};
+
+const DASHBOARD_NUTRIENTS: DashboardNutrient[] = [
+    "carbs", "fat", "sugar", "fiber", "sodium_mg",
+];
+
 export type FoodRow = {
     id: number;
     name: string;
@@ -158,6 +175,14 @@ export async function initializeDatabase() : Promise<SQLite.SQLiteDatabase> {
                 serving_description TEXT,
                 barcode TEXT UNIQUE
             );
+
+            CREATE TABLE IF NOT EXISTS dashboard_nutrient_settings (
+                nutrient TEXT PRIMARY KEY NOT NULL,
+                is_visible INTEGER NOT NULL DEFAULT 0
+                    CHECK (is_visible IN (0, 1)),
+                goal REAL
+                    CHECK (goal IS NULL OR goal > 0)
+            );
         `);
 
         const columns = await database.getAllAsync<{ name: string }>(
@@ -205,6 +230,19 @@ export async function initializeDatabase() : Promise<SQLite.SQLiteDatabase> {
         await addMissingNutritionColumns(database, "foods");
 
         await addMissingNutritionColumns(database, "saved_foods");
+
+        const dashboardNutrients = [
+            "carbs", "fat", "sugar", "fiber", "sodium_mg",
+        ];
+
+        for (const nutrient of dashboardNutrients) {
+            await database.runAsync(
+                `INSERT OR IGNORE INTO dashboard_nutrient_settings
+                 (nutrient, is_visible, goal)
+                 VALUES (?, 0, NULL)`,
+                nutrient
+            );
+        }
 
         db = database;
         
@@ -575,5 +613,51 @@ export async function getSavedFoodByBarcode(
         LIMIT 1
         `,
         barcode
+    );
+}
+
+export async function getDashboardNutrientSettings(): Promise<DashboardNutrientSetting[]> {
+    const database = await getDatabase();
+
+    return await database.getAllAsync<DashboardNutrientSetting>(
+        `SELECT nutrient, is_visible, goal
+         FROM dashboard_nutrient_settings`
+    );
+}
+
+export async function setDashboardNutrientVisible(
+    nutrient: DashboardNutrient,
+    visible: boolean
+): Promise<void> {
+    const database = await getDatabase();
+
+    await database.runAsync(
+        `UPDATE dashboard_nutrient_settings
+         SET is_visible = ?
+         WHERE nutrient = ?`,
+        visible ? 1 : 0,
+        nutrient
+    );
+}
+
+export async function setDashboardNutrientGoal(
+    nutrient: DashboardNutrient,
+    goal: number | null
+): Promise<void> {
+    if (
+        goal !== null &&
+        (!Number.isFinite(goal) || goal <= 0)
+    ) {
+        throw new Error("Goal must be a positive number.");
+    }
+
+    const database = await getDatabase();
+
+    await database.runAsync(
+        `UPDATE dashboard_nutrient_settings
+         SET goal = ?
+         WHERE nutrient = ?`,
+        goal,
+        nutrient
     );
 }

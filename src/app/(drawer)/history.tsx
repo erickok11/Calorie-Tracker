@@ -13,7 +13,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useNavigation } from "expo-router";
 import { DrawerActions } from "expo-router/react-navigation";
 
-import { DailySummaryRow, getDailySummaries } from "@/database/database";
+import { 
+    type DailySummaryRow, 
+    type FoodRow,
+    type DashboardNutrient,
+    getFoodsByDate,
+    getDailySummaries,
+    
+} from "@/database/database";
 
 import { formatDateForDatabase, getDaysInMonth } from "@/utils/date";
 import { getGoalStatus } from "@/utils/goals";
@@ -21,6 +28,18 @@ import { getGoalStatus } from "@/utils/goals";
 import Svg, { Circle } from "react-native-svg";
 
 import ProgressCircle from "@/components/ProgressCircle";
+
+const EXTRA_NUTRIENTS: {
+    key: DashboardNutrient;
+    label: string;
+    unit: string;
+}[] = [
+    { key: "carbs", label: "Carbohydrates", unit: "g"},
+    { key: "fat", label: "Fat", unit: "g"},
+    { key: "sugar", label: "Sugar", unit: "g"},
+    { key: "fiber", label: "Fiber", unit: "g"},
+    { key: "sodium_mg", label: "Sodium", unit: "mg"},
+];
 
 export default function HistoryScreen() {
     const navigation = useNavigation();
@@ -31,6 +50,10 @@ export default function HistoryScreen() {
         new Date()
     );
 
+    const [selectedDayFoods, setSelectedDayFoods] = useState<{ date: string; rows: FoodRow[];} | null>(null);
+
+    const [foodLoadErrorDate, setFoodLoadErrorDate] = useState<string | null>(null);
+
     const [selectedDate, setSelectedDate] = useState<string>(
         formatDateForDatabase(new Date())
     );
@@ -39,6 +62,43 @@ export default function HistoryScreen() {
         useCallback(() => {
             loadHistory();
         }, [])
+    );
+
+    useFocusEffect(
+        useCallback(() => {
+            let active = true;
+
+            setSelectedDayFoods(null);
+            setFoodLoadErrorDate(null);
+
+            const loadSelectedDay = async () => {
+                try {
+                    const rows = await getFoodsByDate(selectedDate);
+
+                    if(active) {
+                        setSelectedDayFoods({
+                            date: selectedDate,
+                            rows,
+                        });
+                    }
+                } catch(error) {
+                    console.error(
+                        "Failed to load historical nutrition:",
+                        error
+                    );
+
+                    if(active){
+                        setFoodLoadErrorDate(selectedDate);
+                    }
+                }
+            };
+
+            void loadSelectedDay();
+
+            return () => {
+                active = false;
+            };
+        }, [selectedDate])
     );
 
     const loadHistory = async () => {
@@ -108,7 +168,7 @@ export default function HistoryScreen() {
                     <TouchableOpacity
                         style={styles.menuButton}
                         onPress={() => 
-                            navigation.dispatch(DrawerActions.openDrawer)
+                            navigation.dispatch(DrawerActions.openDrawer())
                         }
                     >
                         <Text style={styles.menuIcon}>☰</Text>
@@ -266,6 +326,68 @@ export default function HistoryScreen() {
                                 <Text style={styles.noData}>
                                     No food logged on this day.
                                 </Text>
+                            )}
+
+                            {summary && (
+                                <View style={styles.extraNutritionSection}>
+                                    <Text style={styles.extraNutritionTitle}>
+                                        ADDITIONAL NUTRITION
+                                    </Text>
+
+                                    {foodLoadErrorDate === selectedDate ? (
+                                        <Text style={styles.extraNutritionNote}>
+                                            Unable to load nutrition details.
+                                        </Text>
+                                    ) : selectedDayFoods?.date !== selectedDate ? (
+                                        <Text style={styles.extraNutritionNote}>
+                                            Loading Nutrition...
+                                        </Text>
+                                    ) : (
+                                        EXTRA_NUTRIENTS.map((nutrient, index) => {
+                                            const foods = selectedDayFoods.rows;
+
+                                            const knowValues = foods.map((food)=> food[nutrient.key])
+                                                                    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+                                            
+                                            const missingCount = foods.length - knowValues.length;
+
+                                            const total = knowValues.reduce(
+                                                (sum, value) => sum + value,
+                                                0
+                                            );
+
+                                            const formattedValue = knowValues.length === 0 ? "N/A" : `${Number(total.toFixed(1))} ${nutrient.unit}`
+                                            
+                                            return (
+                                                <View key={nutrient.key}>
+                                                    {index > 0 && (
+                                                        <View style={styles.extraNutritionDivider}/>
+                                                    )}
+
+                                                    <View style={styles.extraNutritionRow}>
+                                                        <Text style={styles.extraNutritionLabel}>
+                                                            {nutrient.label}
+                                                        </Text>
+
+                                                        <View style={styles.extraNutritionRight}>
+                                                            <Text style={styles.extraNutritionValue}>
+                                                                {formattedValue}
+                                                            </Text>
+
+                                                            {missingCount > 0 && (
+                                                                <Text style={styles.extraNutritionNote}>
+                                                                    {knowValues.length === 0
+                                                                     ? "Not recorded"
+                                                                     : "Partial data"}
+                                                                </Text>
+                                                            )}
+                                                        </View>
+                                                    </View>
+                                                </View>
+                                            )
+                                        })
+                                    )}
+                                </View>
                             )}
                         </View>
                     );
@@ -507,4 +629,54 @@ const styles = StyleSheet.create({
     disabledArrow: {
         opacity: 0.25,
     },
+
+    extraNutritionSection: {
+        marginTop: 26,
+        paddingTop: 20,
+        borderTopWidth: 1,
+        borderTopColor: "#EEE",
+    },
+
+    extraNutritionTitle: {
+        fontSize: 12,
+        fontWeight: "700",
+        color: "#777",
+        letterSpacing: 0.5,
+        marginBottom: 16,
+    },
+
+    extraNutritionRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingVertical: 4,
+    },
+
+    extraNutritionLabel: {
+        fontSize: 15,
+        color: "#555",
+    },
+
+    extraNutritionRight: {
+        alignItems: "flex-end",
+        flexShrink: 1,
+    },
+
+    extraNutritionValue: {
+        fontSize: 15,
+        fontWeight: "600",
+    },
+
+    extraNutritionNote: {
+        fontSize: 11,
+        color: "#999",
+        marginTop: 3,
+    },
+
+    extraNutritionDivider: {
+        height: 1,
+        backgroundColor: "#EEE",
+        marginVertical: 10,
+    },
+
 });
