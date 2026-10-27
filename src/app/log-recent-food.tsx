@@ -23,7 +23,7 @@ import { FoodUnit } from "@/constants/unit";
 
 import { convertAmount, getCompatibleUnits } from "@/utils/units";
 
-import { calculateNutrition } from "@/utils/nutrition";
+import { getServingRatio, scaleNutrients } from "@/utils/nutrition";
 
 import { useFood } from "@/context/FoodContext";
 
@@ -86,34 +86,8 @@ export default function LogRecentFoodScreen() {
     hasServingInfo && selectedUnit
       ? convertAmount(Number(amount), selectedUnit, food.unit as FoodUnit) : null;
 
-  const nutrition = 
-    hasServingInfo 
-      ? calculateNutrition(food.amount!, food.calories, food.protein, convertedAmount ?? 0)
-      : {calories: food.calories, protein: food.protein};
-
-  const servingRatio = hasServingInfo
-    ? convertedAmount !== null &&
-      Number.isFinite(convertedAmount) && 
-      convertedAmount > 0
-        ? convertedAmount / food.amount! : 0 : 1;
-  
-  const scaleOptionalNutrient = (
-    value: number | null | undefined
-  ): number | null => {
-    if(value == null){
-      return null;
-    }
-
-    return value * servingRatio;
-  };
-
-  const extraNutrition = {
-    carbs: scaleOptionalNutrient(food.carbs),
-    fat: scaleOptionalNutrient(food.fat),
-    sugar: scaleOptionalNutrient(food.sugar),
-    fiber: scaleOptionalNutrient(food.fiber),
-    sodium_mg: scaleOptionalNutrient(food.sodium_mg),
-  };
+  const ratio = hasServingInfo ? getServingRatio(convertedAmount, food.amount!) : 1;
+  const nutrition = scaleNutrients(food, ratio);
 
 
   const consumedAmount = Number(amount);
@@ -149,9 +123,7 @@ export default function LogRecentFoodScreen() {
         name: food.name,
         amount: hasServingInfo ? consumedAmount : undefined,
         unit: hasServingInfo ? selectedUnit : undefined,
-        calories: nutrition.calories,
-        protein: nutrition.protein,
-        ...extraNutrition,
+        ...nutrition
       });
 
       Keyboard.dismiss();
@@ -191,11 +163,11 @@ export default function LogRecentFoodScreen() {
             </Text>
 
             {[
-              { label: "Carbs", value: extraNutrition.carbs, unit: "g"},
-              { label: "Fat", value: extraNutrition.fat, unit: "g"},
-              { label: "Sugar", value: extraNutrition.sugar, unit: "g"},
-              { label: "Fiber", value: extraNutrition.fiber, unit: "g"},
-              { label: "Sodium", value: extraNutrition.sodium_mg, unit: "mg"},
+              { label: "Carbs", value: nutrition.carbs, unit: "g"},
+              { label: "Fat", value: nutrition.fat, unit: "g"},
+              { label: "Sugar", value: nutrition.sugar, unit: "g"},
+              { label: "Fiber", value: nutrition.fiber, unit: "g"},
+              { label: "Sodium", value: nutrition.sodium_mg, unit: "mg"},
             ].map((nutrient) => (
               <Text key = {nutrient.label} style={styles.resultValue}>
                 {nutrient.label}: {" "}
