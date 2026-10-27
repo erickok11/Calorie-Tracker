@@ -40,29 +40,20 @@ export function GoalsProvider({
     const [proteinGoal, setProteinGoal] = useState (140);
 
     useEffect(() => {
+        const loadGoals = async () => {
+            const settings = await getSettings();
+
+            if(settings) {
+                setCalorieGoal(settings.calorie_goal);
+                setProteinGoal(settings.protein_goal);
+
+                const today = formatDateForDatabase(new Date());
+                await ensureDailyGoals(today, settings.calorie_goal, settings.protein_goal);
+            }
+        };
+        
         loadGoals();
     }, []);
-
-    const loadGoals = async() => {
-        const settings = await getSettings();
-
-        if(settings) {
-            setCalorieGoal(settings.calorie_goal);
-            setProteinGoal(settings.protein_goal);
-
-            const today = formatDateForDatabase(
-                new Date()
-            );
-
-            await ensureDailyGoals(
-                today,
-                settings.calorie_goal,
-                settings.protein_goal
-            );
-
-        }
-
-    };
 
     const updateGoal = async(
         newCalorieGoal: number,

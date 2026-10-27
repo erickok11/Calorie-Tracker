@@ -1,5 +1,5 @@
 import { useFood } from "@/context/FoodContext";
-import { router } from "expo-router";
+import { router , useNavigation, useFocusEffect } from "expo-router";
 import {
   ScrollView,
   StyleSheet,
@@ -21,7 +21,6 @@ import {
   useGoal,
 } from "@/context/GoalsContext";
 
-import { useNavigation, useFocusEffect } from "expo-router";
 import { DrawerActions } from "expo-router/react-navigation";
 
 import { useCallback, useState } from "react";
@@ -263,7 +262,7 @@ export default function HomeScreen() {
             </View>
           </View>
         )}
-        <Text style={styles.foodTitle}>TODAY'S FOOD</Text>
+        <Text style={styles.foodTitle}>{"TODAY'S FOOD"}</Text>
 
         {foods.map((food) => (
           <TouchableOpacity

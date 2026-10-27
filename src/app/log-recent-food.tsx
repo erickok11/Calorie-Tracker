@@ -33,7 +33,7 @@ export default function LogRecentFoodScreen() {
   const { id } = useLocalSearchParams<{id: string}>();
 
   const [food, setFood] = useState<RecentFoodRow | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(id));
 
   const [amount, setAmount] = useState("");
   const [selectedUnit, setSelectedUnit] = useState<FoodUnit | undefined>(undefined);
@@ -58,8 +58,6 @@ export default function LogRecentFoodScreen() {
 
     if(id){
       loadFood();
-    } else {
-      setLoading(false);
     }
   }, [id]);
 
