@@ -93,6 +93,6 @@ npm test
 ```
 
 ## Status
-Current Beta: v0.4.0
+Current Beta: v0.5.1
 
 This project is actively under development.
