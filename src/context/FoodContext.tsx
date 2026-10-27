@@ -15,6 +15,8 @@ import {
     useState,
 } from "react";
 
+import { AppState } from "react-native";
+
 export type Food = {
     id: string;
     name: string;
@@ -41,12 +43,16 @@ export function FoodProvider({
     children: ReactNode;
 }) {
     const [foods, setFoods] = useState<Food[]>([]);
+    const [currentDate, setCurrentDate]  = useState(getLocalDate);
 
     useEffect(() => {
-        const loadFoods = async () => {
-            const today = getLocalDate();
+        let cancelled = false;
 
-            const savedFoods = await getFoodsByDate(today);
+        const loadFoods = async () => {
+
+            const savedFoods = await getFoodsByDate(currentDate);
+            
+            if(cancelled) return;
 
             const formattedFoods: Food[] = savedFoods.map((food) => ({
                 id: food.id.toString(),
@@ -66,6 +72,21 @@ export function FoodProvider({
         }
 
         loadFoods();
+
+        return() => {
+            cancelled = true;
+        };
+
+    }, [currentDate]);
+
+    useEffect (() => {
+        const subcription = AppState.addEventListener("change", (nextState) => {
+            if(nextState === "active") {
+                setCurrentDate(getLocalDate());
+            }
+        });
+        
+        return () => subcription.remove();
     }, []);
 
     const addFood = async (food: Omit<Food, "id">) => {
@@ -86,7 +107,12 @@ export function FoodProvider({
                 sodium_mg: food.sodium_mg,
             }
         );
-
+        
+        if (today !== currentDate) {
+            setCurrentDate(today);
+            return;
+        }
+        
         const newFood: Food = {
             ...food,
             id: result.lastInsertRowId.toString(),

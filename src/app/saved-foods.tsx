@@ -76,7 +76,7 @@ export default function SavedFoodsScreen() {
                         </Text>
 
                         <Text style={styles.emptyText}>
-                            No saved foods match "{search}".
+                            {`No saved foods match "{search}".`}
                         </Text>
                     </View>
                 ) : (

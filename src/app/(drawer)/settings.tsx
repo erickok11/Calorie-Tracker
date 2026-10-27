@@ -12,9 +12,8 @@ import {
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect , useNavigation } from "expo-router";
 
-import { useNavigation } from "expo-router";
 import { DrawerActions } from "expo-router/react-navigation";
 
 import { useGoal } from "@/context/GoalsContext";

@@ -1,8 +1,9 @@
 import {
-    calculateNutrition,
     calculateProgress,
     calculateTotalCalories,
-    calculateTotalProtein
+    calculateTotalProtein,
+    scaleNutrients,
+    getServingRatio,
 } from "./nutrition";
 
 import { describe, expect, test } from '@jest/globals';
@@ -40,42 +41,37 @@ describe("nutrition calculations", () => {
         expect(calculateProgress(500, 0)).toBe(0);
     });
 
-    describe("calculateNutrition", () => {
-        test("calculates nutrition for multiple servings", () => {
-            expect(
-                calculateNutrition(4, 187, 35, 8)
-            ).toEqual({
-                calories: 374,
-                protein: 70,
-            });
-        });
+});
 
-        test("calculates nutrition for partial servings", () => {
-            expect(
-                calculateNutrition(1, 160, 30, 0.5)
-            ).toEqual({
-                calories: 80,
-                protein: 15,
-            });
-        });
+describe("getServingRatio", () => {
+    test("divides consumed amount by serving amount", () => {
+        expect(getServingRatio(8, 4)).toBe(2);
+    });
 
-        test("calculates nutrition for decimal servings", () => {
-            expect(
-                calculateNutrition(1, 160, 30, 1.5)
-            ).toEqual({
-                calories: 240,
-                protein: 45,
-            });
-        });
+    test("returns 0 when serving amount is 0", () => {
+        expect(getServingRatio(8, 0)).toBe(0);
+    });
 
-        test("returns zero when serving amount is invalid", () => {
-            expect(
-                calculateNutrition(0, 160, 30, 1)
-            ).toEqual({
-                calories: 0,
-                protein: 0
-            });
-        });
-    })
+    test("returns 0 when units are incompatible (null amount)", () => {
+        expect(getServingRatio(null, 4)).toBe(0);
+    });
+});
 
+describe("scaleNutrients", () => {
+    const food = {
+        calories: 200, protein: 10,
+        carbs: 30, fat: 5, sugar: 12, fiber: 3, sodium_mg: 400,
+    };
+
+    test("scales every nutrient by the ratio", () => {
+        expect(scaleNutrients(food, 1.5)).toEqual({
+            calories: 300, protein: 15,
+            carbs: 45, fat: 7.5, sugar: 18, fiber: 4.5, sodium_mg: 600,
+        });
+    });
+
+    test("keeps unknown nutrients as null, not 0", () => {
+        const result = scaleNutrients({ ...food, sugar: null }, 2);
+        expect(result.sugar).toBeNull();
+    });
 });

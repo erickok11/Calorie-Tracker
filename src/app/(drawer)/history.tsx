@@ -60,6 +60,11 @@ export default function HistoryScreen() {
 
     useFocusEffect(
         useCallback(() => {
+            const loadHistory = async () => {
+                const result = await getDailySummaries();
+                setDays(result);
+            };
+            
             loadHistory();
         }, [])
     );
@@ -101,10 +106,6 @@ export default function HistoryScreen() {
         }, [selectedDate])
     );
 
-    const loadHistory = async () => {
-        const results = await getDailySummaries();
-        setDays(results);
-    };
 
     const goToPreviousMonth = () => {
         setCurrentMonth(
