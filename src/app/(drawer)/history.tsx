@@ -10,7 +10,7 @@ import {
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useFocusEffect, useNavigation } from "expo-router";
+import { useFocusEffect, useNavigation, router } from "expo-router";
 import { DrawerActions } from "expo-router/react-navigation";
 
 import { 
@@ -19,7 +19,6 @@ import {
     type DashboardNutrient,
     getFoodsByDate,
     getDailySummaries,
-    
 } from "@/database/database";
 
 import { formatDateForDatabase, getDaysInMonth } from "@/utils/date";
@@ -388,6 +387,38 @@ export default function HistoryScreen() {
                                             )
                                         })
                                     )}
+                                    {selectedDayFoods?.date === selectedDate &&
+                                        selectedDayFoods.rows.length > 0 && (
+                                            <View style={styles.extraNutritionSection}>
+                                                <Text style={styles.extraNutritionTitle}>FOODS</Text>
+
+                                                {selectedDayFoods.rows.map((food,index) => (
+                                                    <View key={food.id}>
+                                                        {index > 0 && <View style={styles.extraNutritionDivider}/>}
+                                                        <TouchableOpacity
+                                                            style={styles.foodRow}
+                                                            onPress={() => 
+                                                                router.push({
+                                                                    pathname: "/food-details",
+                                                                    params: {id: food.id.toString()},
+                                                                })
+                                                            }
+                                                        >
+                                                            <View style={styles.foodText}>
+                                                                <Text style={styles.foodName}>{food.name}</Text>
+                                                                <Text style={styles.foodInfo}>
+                                                                    {Math.round(food.calories)}kcal ·{" "}
+                                                                    {Number(food.protein.toFixed(1))}g protein
+                                                                </Text>
+                                                            </View>
+
+                                                            <Text style={styles.chevron}>›</Text>
+                                                        </TouchableOpacity>
+                                                            
+                                                    </View>
+                                                ))}
+                                            </View>
+                                        )}
                                 </View>
                             )}
                         </View>
@@ -680,4 +711,28 @@ const styles = StyleSheet.create({
         marginVertical: 10,
     },
 
+    foodRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 12,
+    },
+
+    foodText: {
+        flex: 1,
+    },
+
+    foodName: {
+        fontSize: 16,
+        fontWeight: "600",
+    },
+
+    foodInfo: {
+        color: "#777",
+        marginTop: 4,
+    },
+
+    chevron: {
+        fontSize: 22,
+        color: "#C7C7CC"
+    },
 });
