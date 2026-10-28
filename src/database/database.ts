@@ -295,8 +295,6 @@ export async function insertFood(
     return result;
 }
 
-
-
 export async function getFoodsByDate(date: string) {
     const database = await getDatabase();
     
@@ -309,6 +307,15 @@ export async function getFoodsByDate(date: string) {
     );
 
     return foods;
+}
+
+export async function getFoodsById(id: number): Promise<FoodRow | null> {
+    const database = await getDatabase();
+
+    return await database.getFirstAsync<FoodRow>(
+        `SELECT * FROM foods WHERE id = ?`,
+        id
+    );
 }
 
 export async function deleteFoodById(id: number){

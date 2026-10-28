@@ -5,19 +5,29 @@ import {
     TouchableOpacity,
     View,
     ScrollView,
+    ActivityIndicator,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useFood } from "@/context/FoodContext";
 import { router, useLocalSearchParams } from "expo-router";
+import { useFoodById } from "@/hooks/use-food-by-id";
 
 export default function FoodDetailsScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
 
-    const { foods, deleteFood } = useFood();
+    const {deleteFood} = useFood();
 
-    const food = foods.find((food) => food.id === id);
+    const {food, loading} = useFoodById(id);
+
+    if(loading) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <ActivityIndicator size="large" />
+            </SafeAreaView>
+        );
+    }
 
     if (!food) {
         return (

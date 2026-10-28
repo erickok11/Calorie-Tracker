@@ -5,6 +5,7 @@ import {
     insertFood,
     updateFoodById,
     ExtraNutritionInput,
+    FoodRow,
 } from "@/database/database";
 
 import {
@@ -37,6 +38,22 @@ const FoodContext = createContext<FoodContextType | undefined>(
     undefined
 );
 
+export function rowToFood(row: FoodRow): Food {
+    return {
+        id: row.id.toString(),
+        name: row.name,
+        amount: row.amount ?? undefined,
+        unit: row.unit ?? undefined,
+        calories: row.calories,
+        protein: row.protein,
+        carbs: row.carbs,
+        fat: row.fat,
+        sugar: row.sugar,
+        fiber: row.fiber,
+        sodium_mg: row.sodium_mg,
+    };
+}
+
 export function FoodProvider({
     children,
 }: {
@@ -54,21 +71,7 @@ export function FoodProvider({
             
             if(cancelled) return;
 
-            const formattedFoods: Food[] = savedFoods.map((food) => ({
-                id: food.id.toString(),
-                name: food.name,
-                amount: food.amount ?? undefined,
-                unit: food.unit ?? undefined,
-                calories: food.calories,
-                protein: food.protein,
-                carbs: food.carbs,
-                fat: food.fat,
-                sugar: food.sugar,
-                fiber: food.fiber,
-                sodium_mg: food.sodium_mg,
-            }));
-
-            setFoods(formattedFoods);
+            setFoods(savedFoods.map(rowToFood));
         }
 
         loadFoods();

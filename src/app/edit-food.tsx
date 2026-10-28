@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+    ActivityIndicator,
     Alert,
     Keyboard,
     Pressable,
@@ -13,12 +14,13 @@ import {
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useFood } from "@/context/FoodContext";
+import { type Food, useFood } from "@/context/FoodContext";
 import { router, useLocalSearchParams } from "expo-router";
 
 import { FoodUnit } from "@/constants/unit";
 
 import UnitPicker from "@/components/UnitPicker";
+import { useFoodById } from "@/hooks/use-food-by-id";
 
 function parseOptionalNumber(value: string): number | null {
     if(value.trim() === ""){
@@ -31,46 +33,15 @@ function parseOptionalNumber(value: string): number | null {
 export default function EditFoodScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
 
-    const { foods, updateFood } = useFood();
+    const {food, loading} = useFoodById(id);
 
-    const food = foods.find((food) => food.id === id);
-
-    const [name, setName] = useState(food?.name ?? "");
-    const [amount, setAmount] = useState(
-        food?.amount?.toString() ?? ""
-    );
-    
-    const [unit, setUnit] = useState<FoodUnit | undefined>(
-        food?.unit ? (food.unit as FoodUnit) : undefined
-    );
-
-    const [calories, setCalories] = useState(
-        food?.calories.toString() ?? ""
-    );
-
-    const [protein, setProtein] = useState(
-        food?.protein.toString() ?? ""
-    );
-
-    const [carbs, setCarbs] = useState(
-        food?.carbs?.toString() ?? ""
-    );
-
-    const [fat, setFat] = useState(
-        food?.fat?.toString() ?? ""
-    );
-
-    const [sugar, setSugar] = useState(
-        food?.sugar?.toString() ?? ""   
-    );
-
-    const [fiber, setFiber] = useState(
-        food?.fiber?.toString() ?? ""
-    );
-
-    const [sodium, setSodium] = useState(
-        food?.sodium_mg?.toString() ?? ""
-    );
+    if (loading) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <ActivityIndicator size="large" />
+            </SafeAreaView>
+        );
+    }
 
     if (!food) {
         return (
@@ -79,6 +50,50 @@ export default function EditFoodScreen() {
             </SafeAreaView>
         )
     };
+
+    return <EditFoodForm food={food} />;
+}
+
+function EditFoodForm({food}: {food: Food}){
+
+    const {updateFood} = useFood();
+
+    const [name, setName] = useState(food.name ?? "");
+    const [amount, setAmount] = useState(
+        food.amount?.toString() ?? ""
+    );
+    
+    const [unit, setUnit] = useState<FoodUnit | undefined>(
+        food.unit ? (food.unit as FoodUnit) : undefined
+    );
+
+    const [calories, setCalories] = useState(
+        food.calories.toString() ?? ""
+    );
+
+    const [protein, setProtein] = useState(
+        food.protein.toString() ?? ""
+    );
+
+    const [carbs, setCarbs] = useState(
+        food.carbs?.toString() ?? ""
+    );
+
+    const [fat, setFat] = useState(
+        food.fat?.toString() ?? ""
+    );
+
+    const [sugar, setSugar] = useState(
+        food.sugar?.toString() ?? ""   
+    );
+
+    const [fiber, setFiber] = useState(
+        food.fiber?.toString() ?? ""
+    );
+
+    const [sodium, setSodium] = useState(
+        food.sodium_mg?.toString() ?? ""
+    );
 
     const handleSave = async () => {
         const amountNumber =
