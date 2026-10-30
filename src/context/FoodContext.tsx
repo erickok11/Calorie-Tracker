@@ -6,6 +6,8 @@ import {
     updateFoodById,
     ExtraNutritionInput,
     FoodRow,
+    ensureDailyGoals,
+    getSettings,
 } from "@/database/database";
 
 import {
@@ -29,7 +31,7 @@ export type Food = {
 
 type FoodContextType = {
     foods: Food[];
-    addFood: (food: Omit<Food, "id">) => Promise<void>;
+    addFood: (food: Omit<Food, "id">, date?: string) => Promise<void>;
     deleteFood: (id: string) => Promise<void>;
     updateFood: (food: Food) => Promise<void>;
 };
@@ -92,8 +94,16 @@ export function FoodProvider({
         return () => subcription.remove();
     }, []);
 
-    const addFood = async (food: Omit<Food, "id">) => {
+    const addFood = async (food: Omit<Food, "id">, date?: string) => {
         const today = getLocalDate();
+        const targetDate = date ?? today;
+
+        const settings = await getSettings();
+        if(settings) {
+            await ensureDailyGoals(
+                targetDate, settings.calorie_goal, settings.protein_goal
+            );
+        }
 
         const result = await insertFood(
             food.name,
@@ -101,7 +111,7 @@ export function FoodProvider({
             food.unit,
             food.calories,
             food.protein,
-            today,
+            targetDate,
             {
                 carbs: food.carbs,
                 fat: food.fat,
@@ -110,6 +120,8 @@ export function FoodProvider({
                 sodium_mg: food.sodium_mg,
             }
         );
+
+        if (targetDate !== today) return;
         
         if (today !== currentDate) {
             setCurrentDate(today);

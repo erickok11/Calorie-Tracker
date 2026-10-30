@@ -54,6 +54,8 @@ export default function LogSavedFoodScreen() {
 
     const [selectedUnit, setSelectedUnit] = useState<FoodUnit | undefined>(undefined);
 
+    const { date } = useLocalSearchParams<{ date?: string }>();
+
     useEffect(() => {
         const loadFood = async () => {
             if (!id) {
@@ -123,9 +125,9 @@ export default function LogSavedFoodScreen() {
                 amount: consumedAmount,
                 unit: selectedUnit,
                 ...nutrition,
-            });
+            },date);
 
-            router.replace("/(drawer)");
+            router.dismissAll();
         } catch (error) {
             console.error("Failed to add saved food:", error);
 

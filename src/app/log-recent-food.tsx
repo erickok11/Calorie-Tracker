@@ -42,6 +42,8 @@ export default function LogRecentFoodScreen() {
 
   const [isSaving, setIsSaving] = useState(false);
 
+  const { date } = useLocalSearchParams<{ date?: string}>();
+
   useEffect(() => {
     const loadFood = async () => {
       try {
@@ -124,10 +126,10 @@ export default function LogRecentFoodScreen() {
         amount: hasServingInfo ? consumedAmount : undefined,
         unit: hasServingInfo ? selectedUnit : undefined,
         ...nutrition
-      });
+      }, date);
 
       Keyboard.dismiss();
-      router.replace("/(drawer)");
+      router.dismissAll();
     } catch (error) {
       console.error("Failed to log recent food:", error);
 

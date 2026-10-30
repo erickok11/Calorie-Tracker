@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useFood } from "@/context/FoodContext";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 
 import { FoodUnit } from "@/constants/unit";
 
@@ -42,6 +42,7 @@ export default function AddFoodScreen() {
     const [sugar, setSugar] = useState("");
     const [fiber, setFiber] = useState("");
     const [sodium, setSodium] = useState("");
+    const { date } = useLocalSearchParams<{ date?: string }>();
 
     const [savedFoods, setSavedFoods] = useState<SavedFoodRow[]>([]);
     const [saveForLater, setSaveForLater ] = useState(false);
@@ -130,7 +131,7 @@ export default function AddFoodScreen() {
             calories: calorieNumber,
             protein: proteinNumber,
             ...nutrients,
-        });
+        }, date);
 
         router.back();
     };
@@ -154,7 +155,7 @@ export default function AddFoodScreen() {
                         <View style={[styles.headerSide, styles.headerRight]}>
                             <TouchableOpacity
                                 style={styles.container}
-                                onPress={() => router.push("/scanner")}
+                                onPress={() => router.push({ pathname: "/scanner", params: date ? {date} : undefined })}
                                 accessibilityRole="button"
                                 accessibilityLabel="Scan food"
                             >
@@ -167,9 +168,21 @@ export default function AddFoodScreen() {
                         </View>
                     </View>
 
+                    {date && (
+                        <View style={styles.header}>
+                            <Text style={styles.dateText}>
+                                Adding to{" "}
+                                {new Date(`${date}T12:00:00`).toLocaleDateString("en-US", {
+                                    weekday: "long", month: "long", day: "numeric",
+                                })}
+                            </Text>
+                        </View>
+                    )}
+
+
                     <TouchableOpacity
                         style={styles.savedFoodsButton}
-                        onPress={() => router.push("/recent-food")}
+                        onPress={() => router.push({pathname: "/recent-food", params: date ? {date}: undefined})}
                     >
                         <Text style={styles.savedFoodsButtonText}>
                             Recent Foods
@@ -180,7 +193,7 @@ export default function AddFoodScreen() {
 
                     <TouchableOpacity
                         style={styles.savedFoodsButton}
-                        onPress={() => router.push("/saved-foods")}
+                        onPress={() => router.push({pathname:"/saved-foods", params: date ? {date}: undefined})}
                     >
                         <Text style={styles.savedFoodsButtonText}>
                             Saved Foods
@@ -587,6 +600,12 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
+
+    dateText: {
+        fontSize: 18,
+        color: "#777",
+        textAlign: "center",
+    }
 });
 
     

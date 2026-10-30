@@ -387,39 +387,53 @@ export default function HistoryScreen() {
                                             )
                                         })
                                     )}
-                                    {selectedDayFoods?.date === selectedDate &&
-                                        selectedDayFoods.rows.length > 0 && (
-                                            <View style={styles.extraNutritionSection}>
-                                                <Text style={styles.extraNutritionTitle}>FOODS</Text>
-
-                                                {selectedDayFoods.rows.map((food,index) => (
-                                                    <View key={food.id}>
-                                                        {index > 0 && <View style={styles.extraNutritionDivider}/>}
-                                                        <TouchableOpacity
-                                                            style={styles.foodRow}
-                                                            onPress={() => 
-                                                                router.push({
-                                                                    pathname: "/food-details",
-                                                                    params: {id: food.id.toString()},
-                                                                })
-                                                            }
-                                                        >
-                                                            <View style={styles.foodText}>
-                                                                <Text style={styles.foodName}>{food.name}</Text>
-                                                                <Text style={styles.foodInfo}>
-                                                                    {Math.round(food.calories)}kcal ·{" "}
-                                                                    {Number(food.protein.toFixed(1))}g protein
-                                                                </Text>
-                                                            </View>
-
-                                                            <Text style={styles.chevron}>›</Text>
-                                                        </TouchableOpacity>
-                                                            
-                                                    </View>
-                                                ))}
-                                            </View>
-                                        )}
                                 </View>
+                            )}
+                            {selectedDayFoods?.date === selectedDate &&
+                                selectedDayFoods.rows.length > 0 && (
+                                    <View style={styles.extraNutritionSection}>
+                                        <Text style={styles.extraNutritionTitle}>FOODS</Text>
+
+                                        {selectedDayFoods.rows.map((food,index) => (
+                                            <View key={food.id}>
+                                                {index > 0 && <View style={styles.extraNutritionDivider}/>}
+                                                <TouchableOpacity
+                                                    style={styles.foodRow}
+                                                    onPress={() => 
+                                                        router.push({
+                                                            pathname: "/food-details",
+                                                            params: {id: food.id.toString()},
+                                                        })
+                                                    }
+                                                >
+                                                    <View style={styles.foodText}>
+                                                        <Text style={styles.foodName}>{food.name}</Text>
+                                                        <Text style={styles.foodInfo}>
+                                                            {Math.round(food.calories)}kcal ·{" "}
+                                                            {Number(food.protein.toFixed(1))}g protein
+                                                        </Text>
+                                                    </View>
+
+                                                    <Text style={styles.chevron}>›</Text>
+                                                </TouchableOpacity>
+                                                    
+                                            </View>
+                                        ))}
+                                    </View>
+                            )}
+
+                            {selectedDate <= formatDateForDatabase(new Date()) && (
+                                <TouchableOpacity
+                                    style={styles.addButton}
+                                    onPress={() =>
+                                        router.push({
+                                            pathname: "/add-food",
+                                            params: { date: selectedDate },
+                                        })
+                                    }
+                                >
+                                    <Text style={styles.addButtonText}>+ Add Food</Text>
+                                </TouchableOpacity>
                             )}
                         </View>
                     );
@@ -734,5 +748,19 @@ const styles = StyleSheet.create({
     chevron: {
         fontSize: 22,
         color: "#C7C7CC"
+    },
+
+    addButton: {
+        backgroundColor: "#3478F6",
+        borderRadius: 14,
+        padding: 14,
+        alignItems: "center",
+        marginTop: 20,
+    },
+
+    addButtonText: {
+        color: "white",
+        fontSize: 16,
+        fontWeight: "600",
     },
 });

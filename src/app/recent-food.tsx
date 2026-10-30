@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
     useFocusEffect,
     useRouter,
+    useLocalSearchParams,
 } from "expo-router";
 
 import {
@@ -25,6 +26,7 @@ export default function RecentFoodsScreen() {
     const router = useRouter();
 
     const [recentFoods , setRecentFoods] = useState<RecentFoodRow[]>([]);
+    const { date } = useLocalSearchParams<{ date?: string }>();
 
 
     const [search, setSearch] = useState("");
@@ -105,6 +107,7 @@ export default function RecentFoodsScreen() {
                                     pathname: "/log-recent-food",
                                     params: {
                                         id: food.id.toString(),
+                                        ...(date ? { date } : {}),
                                     },
                                 })
                             }}

@@ -1,5 +1,5 @@
 import { getSavedFood, SavedFoodRow } from "@/database/database";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import {
     ScrollView,
@@ -28,6 +28,8 @@ export default function SavedFoodsScreen() {
 
     const filteredFoods = savedFoods.filter((food) => 
         food.name.toLowerCase().includes(search.trim().toLowerCase()));
+
+    const { date } = useLocalSearchParams<{ date?: string }>();
 
     useFocusEffect(
         useCallback(() => {
@@ -90,6 +92,7 @@ export default function SavedFoodsScreen() {
                                         pathname: "/log-saved-food",
                                         params: {
                                             id: food.id.toString(),
+                                            ...(date? { date }: {}),
                                         },
                                     });
                                 }}

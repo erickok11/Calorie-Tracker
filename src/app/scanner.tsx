@@ -18,7 +18,7 @@ import {
     View
 } from "react-native";
 
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
@@ -55,6 +55,8 @@ export default function ScannerScreen(){
     const [alreadySaved, setAlreadySaved] = useState(false);
 
     const servingCount = Number(servings);
+
+    const { date } = useLocalSearchParams<{ date?: string }>();
 
     const validServings =
         servings.trim() !== "" &&
@@ -162,11 +164,11 @@ export default function ScannerScreen(){
                 calories: calculatedCalories,
                 protein: calculatedProtein,
                 ...extraNutrition,
-            });
+            }, date);
 
             Keyboard.dismiss();
             
-            router.replace("/(drawer)");
+            router.dismissAll();
         } catch(error) {
             console.error("Failed to log scanned food:", error);
 
