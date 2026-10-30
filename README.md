@@ -18,7 +18,8 @@ set personalized nutrition goals, and review their progress over time.
 - Additional nutrition goals
 
 ### Food History
-- View previous food logs using a monthly calendar
+- View, edit, and deletes foods for any past day
+- Add foods to past days using manual entry, barcode scan, recent or saved foods
 - See daily calorie and protein summaries
 - Tack whether daily nutrition goals were achieved
 
@@ -52,7 +53,6 @@ Feedback and bug reports are greatly appreciated
 
 ### Future
 - Photo-based food analysis
-- Detailed historical food logs
 - Personalized goals with ai
 - Meal suggestion with ai
 
@@ -93,6 +93,6 @@ npm test
 ```
 
 ## Status
-Current Beta: v0.5.1
+Current Beta: v0.6.0
 
 This project is actively under development.
