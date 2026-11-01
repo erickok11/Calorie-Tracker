@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "expo-router";
 
-import { getFoodsById } from "@/database/database";
+import { getFoodById } from "@/database/database";
 import { type Food, rowToFood} from "@/context/FoodContext";
 
 export function useFoodById(id: string | undefined) {
@@ -14,7 +14,7 @@ export function useFoodById(id: string | undefined) {
 
             const load = async () => {
                 try {
-                    const row = id ? await getFoodsById(Number(id)) : null;
+                    const row = id ? await getFoodById(Number(id)) : null;
 
                     if(active) setFood(row ? rowToFood(row) : null);
                 } catch (error) {

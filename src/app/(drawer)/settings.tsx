@@ -18,7 +18,7 @@ import { DrawerActions } from "expo-router/react-navigation";
 
 import { useGoal } from "@/context/GoalsContext";
 
-import { act, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 
 import {
     getDashboardNutrientSettings,

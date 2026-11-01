@@ -58,7 +58,7 @@ function EditFoodForm({food}: {food: Food}){
 
     const {updateFood} = useFood();
 
-    const [name, setName] = useState(food.name ?? "");
+    const [name, setName] = useState(food.name);
     const [amount, setAmount] = useState(
         food.amount?.toString() ?? ""
     );
@@ -68,11 +68,11 @@ function EditFoodForm({food}: {food: Food}){
     );
 
     const [calories, setCalories] = useState(
-        food.calories.toString() ?? ""
+        food.calories.toString()
     );
 
     const [protein, setProtein] = useState(
-        food.protein.toString() ?? ""
+        food.protein.toString()
     );
 
     const [carbs, setCarbs] = useState(

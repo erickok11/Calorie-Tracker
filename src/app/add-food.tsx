@@ -44,7 +44,7 @@ export default function AddFoodScreen() {
     const [sodium, setSodium] = useState("");
     const { date } = useLocalSearchParams<{ date?: string }>();
 
-    const [savedFoods, setSavedFoods] = useState<SavedFoodRow[]>([]);
+    const [ , setSavedFoods] = useState<SavedFoodRow[]>([]);
     const [saveForLater, setSaveForLater ] = useState(false);
 
     useEffect(() => {

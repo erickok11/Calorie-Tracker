@@ -26,10 +26,6 @@ export type DashboardNutrientSetting = {
     goal: number | null;
 };
 
-const DASHBOARD_NUTRIENTS: DashboardNutrient[] = [
-    "carbs", "fat", "sugar", "fiber", "sodium_mg",
-];
-
 export type FoodRow = {
     id: number;
     name: string;
@@ -309,7 +305,7 @@ export async function getFoodsByDate(date: string) {
     return foods;
 }
 
-export async function getFoodsById(id: number): Promise<FoodRow | null> {
+export async function getFoodById(id: number): Promise<FoodRow | null> {
     const database = await getDatabase();
 
     return await database.getFirstAsync<FoodRow>(

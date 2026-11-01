@@ -409,7 +409,7 @@ export default function HistoryScreen() {
                                                     <View style={styles.foodText}>
                                                         <Text style={styles.foodName}>{food.name}</Text>
                                                         <Text style={styles.foodInfo}>
-                                                            {Math.round(food.calories)}kcal ·{" "}
+                                                            {Math.round(food.calories)} kcal ·{" "}
                                                             {Number(food.protein.toFixed(1))}g protein
                                                         </Text>
                                                     </View>
