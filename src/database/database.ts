@@ -1,3 +1,4 @@
+import { MealType } from "@/constants/meals";
 import { FoodUnit } from "@/constants/unit";
 import * as SQLite from "expo-sqlite";
 
@@ -34,6 +35,7 @@ export type FoodRow = {
     calories: number;
     protein: number;
     date: string;
+    meal: string | null;
 } & ExtraNutrition;
 
 export type settingsRow = {
@@ -227,6 +229,14 @@ export async function initializeDatabase() : Promise<SQLite.SQLiteDatabase> {
 
         await addMissingNutritionColumns(database, "saved_foods");
 
+        const foodColumns = await database.getAllAsync<{ name:string }>(
+            "PRAGMA table_info(foods)"
+        );
+
+        if (!foodColumns.some((column) => column.name === "meal")) {
+            await database.execAsync("ALTER TABLE foods ADD COLUMN meal TEXT");
+        }
+
         const dashboardNutrients = [
             "carbs", "fat", "sugar", "fiber", "sodium_mg",
         ];
@@ -267,14 +277,15 @@ export async function insertFood(
     calories: number,
     protein: number,
     date: string,
-    nutrients: ExtraNutritionInput = {}
+    nutrients: ExtraNutritionInput = {},
+    meal: MealType,
 ){
     const database = await getDatabase();
 
     const result = await database.runAsync(
         `INSERT INTO foods
-            (name, amount, unit, calories, protein, carbs, fat, sugar, fiber, sodium_mg, date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            (name, amount, unit, calories, protein, carbs, fat, sugar, fiber, sodium_mg, meal, date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         name,
         amount ?? null,
         unit ?? null,
@@ -285,7 +296,8 @@ export async function insertFood(
         nutrients.sugar ?? null,
         nutrients.fiber ?? null,
         nutrients.sodium_mg ?? null,
-        date
+        meal ?? null,
+        date,
     );
 
     return result;
@@ -330,7 +342,8 @@ export async function updateFoodById(
     unit: string | undefined,
     calories: number,
     protein: number,
-    nutrients: ExtraNutritionInput = {}
+    nutrients: ExtraNutritionInput = {},
+    meal?: MealType,
 ){
     const datatbase = await getDatabase();
 
@@ -353,6 +366,11 @@ export async function updateFoodById(
         }
     }
 
+    if (meal !== undefined) {
+        updates.push("meal = ?");
+        values.push(meal);
+    }
+    
     values.push(id)
 
     await datatbase.runAsync(

@@ -1,3 +1,4 @@
+import { isMealType, MealType } from "@/constants/meals";
 import {
     deleteFoodById,
     getFoodsByDate,
@@ -9,6 +10,7 @@ import {
     ensureDailyGoals,
     getSettings,
 } from "@/database/database";
+import { getDefaultMeal } from "@/utils/meals";
 
 import {
     createContext,
@@ -27,6 +29,7 @@ export type Food = {
     unit?: string;
     calories: number;
     protein: number;
+    meal?: MealType;
 } & ExtraNutritionInput;
 
 type FoodContextType = {
@@ -53,6 +56,7 @@ export function rowToFood(row: FoodRow): Food {
         sugar: row.sugar,
         fiber: row.fiber,
         sodium_mg: row.sodium_mg,
+        meal: isMealType(row.meal) ? row.meal : undefined,
     };
 }
 
@@ -97,6 +101,7 @@ export function FoodProvider({
     const addFood = async (food: Omit<Food, "id">, date?: string) => {
         const today = getLocalDate();
         const targetDate = date ?? today;
+        const meal = food.meal ?? getDefaultMeal(new Date());
 
         const settings = await getSettings();
         if(settings) {
@@ -118,7 +123,8 @@ export function FoodProvider({
                 sugar: food.sugar,
                 fiber: food.fiber,
                 sodium_mg: food.sodium_mg,
-            }
+            },
+            meal
         );
 
         if (targetDate !== today) return;
@@ -130,6 +136,7 @@ export function FoodProvider({
         
         const newFood: Food = {
             ...food,
+            meal,
             id: result.lastInsertRowId.toString(),
         };
 
@@ -171,7 +178,8 @@ export function FoodProvider({
                 sugar: mergedFood.sugar,
                 fiber: mergedFood.fiber,
                 sodium_mg: mergedFood.sodium_mg,
-            }
+            },
+            mergedFood.meal,
             
         );
 
