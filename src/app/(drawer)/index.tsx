@@ -30,6 +30,9 @@ import {
   type DashboardNutrientSetting,
 } from "@/database/database";
 
+import MealSection from "@/components/MealSection";
+import { groupFoodsByMeal } from "@/utils/meals";
+
 const EXTRA_NUTRIENTS: {
   key: DashboardNutrient;
   label: string;
@@ -109,6 +112,8 @@ export default function HomeScreen() {
 
   const totalCalories = calculateTotalCalories(foods);
   const totalProtein = calculateTotalProtein(foods);
+
+  const mealGroups = groupFoodsByMeal(foods);
 
   const extraRings = EXTRA_NUTRIENTS.flatMap((nutrient) => {
     const setting = dashboardSettings.find(
@@ -264,35 +269,19 @@ export default function HomeScreen() {
         )}
         <Text style={styles.foodTitle}>{"TODAY'S FOOD"}</Text>
 
-        {foods.map((food) => (
-          <TouchableOpacity
-            key={food.id}
-            style={styles.foodCard}
-            onPress={() =>
-              router.push({
-                pathname: "/food-details",
-                params: { id: food.id},
-              })
+        {mealGroups.map((group) => (
+          <MealSection
+            key={group.key}
+            group={group}
+            onPressFood={(food) => 
+                router.push({ pathname: "/food-details", params: {id: food.id}})
             }
-          >
-            <View>
-              <Text style={styles.foodName}>{food.name}</Text>
-
-              <Text style={styles.foodInfo}>
-                {food.calories} kcal • {food.protein}g protein
-              </Text>
-            </View>
-
-            <Text style={styles.chevron}>›</Text>
-          </TouchableOpacity>
+            onAdd={
+              group.key === "other" ? undefined : 
+                () => router.push({ pathname: "/add-food", params: {meal: group.key}})
+            }
+          />
         ))}
-
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => router.push("/add-food")}
-        >
-          <Text style={styles.addButtonText}>+ Add Food</Text>
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );

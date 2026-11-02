@@ -38,6 +38,7 @@ import {
     convertAmount,
     getCompatibleUnits,
 } from "@/utils/units";
+import { useAddFoodTarget } from "@/hooks/use-add-food-target";
 
 export default function LogSavedFoodScreen() {
     const router = useRouter();
@@ -54,7 +55,7 @@ export default function LogSavedFoodScreen() {
 
     const [selectedUnit, setSelectedUnit] = useState<FoodUnit | undefined>(undefined);
 
-    const { date } = useLocalSearchParams<{ date?: string }>();
+    const { date, meal } = useAddFoodTarget();
 
     useEffect(() => {
         const loadFood = async () => {
@@ -125,6 +126,7 @@ export default function LogSavedFoodScreen() {
                 amount: consumedAmount,
                 unit: selectedUnit,
                 ...nutrition,
+                meal,
             },date);
 
             router.dismissAll();

@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useFood } from "@/context/FoodContext";
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 
 import { FoodUnit } from "@/constants/unit";
 
@@ -28,6 +28,8 @@ import {
 } from "@/database/database";
 
 import { Ionicons } from "@expo/vector-icons";
+import { useAddFoodTarget } from "@/hooks/use-add-food-target";
+import { MEALS } from "@/constants/meals";
 
 export default function AddFoodScreen() {
     const { addFood } = useFood();
@@ -42,10 +44,16 @@ export default function AddFoodScreen() {
     const [sugar, setSugar] = useState("");
     const [fiber, setFiber] = useState("");
     const [sodium, setSodium] = useState("");
-    const { date } = useLocalSearchParams<{ date?: string }>();
+    const { date, meal, forwardParams } = useAddFoodTarget();
 
     const [ , setSavedFoods] = useState<SavedFoodRow[]>([]);
     const [saveForLater, setSaveForLater ] = useState(false);
+
+    const mealLabel = MEALS.find((m) => m.key === meal)?.label;
+    const dayLabel = date
+        ? new Date(`${date}T12:00:00`).toLocaleDateString("en-US", {
+            weekday: "long", month: "long", day: "numeric",
+        }) : undefined;
 
     useEffect(() => {
         const loadSavedFoods = async () => {
@@ -131,6 +139,7 @@ export default function AddFoodScreen() {
             calories: calorieNumber,
             protein: proteinNumber,
             ...nutrients,
+            meal,
         }, date);
 
         router.back();
@@ -155,7 +164,7 @@ export default function AddFoodScreen() {
                         <View style={[styles.headerSide, styles.headerRight]}>
                             <TouchableOpacity
                                 style={styles.container}
-                                onPress={() => router.push({ pathname: "/scanner", params: date ? {date} : undefined })}
+                                onPress={() => router.push({ pathname: "/scanner", params: forwardParams })}
                                 accessibilityRole="button"
                                 accessibilityLabel="Scan food"
                             >
@@ -168,13 +177,10 @@ export default function AddFoodScreen() {
                         </View>
                     </View>
 
-                    {date && (
+                    {(mealLabel || dayLabel) && (
                         <View style={styles.header}>
                             <Text style={styles.dateText}>
-                                Adding to{" "}
-                                {new Date(`${date}T12:00:00`).toLocaleDateString("en-US", {
-                                    weekday: "long", month: "long", day: "numeric",
-                                })}
+                                Adding to {[mealLabel, dayLabel].filter(Boolean).join(" · ")}
                             </Text>
                         </View>
                     )}
@@ -182,7 +188,7 @@ export default function AddFoodScreen() {
 
                     <TouchableOpacity
                         style={styles.savedFoodsButton}
-                        onPress={() => router.push({pathname: "/recent-food", params: date ? {date}: undefined})}
+                        onPress={() => router.push({pathname: "/recent-food", params: forwardParams})}
                     >
                         <Text style={styles.savedFoodsButtonText}>
                             Recent Foods
@@ -193,7 +199,7 @@ export default function AddFoodScreen() {
 
                     <TouchableOpacity
                         style={styles.savedFoodsButton}
-                        onPress={() => router.push({pathname:"/saved-foods", params: date ? {date}: undefined})}
+                        onPress={() => router.push({pathname:"/saved-foods", params: forwardParams})}
                     >
                         <Text style={styles.savedFoodsButtonText}>
                             Saved Foods

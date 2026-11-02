@@ -18,7 +18,7 @@ import {
     View
 } from "react-native";
 
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
@@ -29,6 +29,7 @@ import {
 import { useFood } from "@/context/FoodContext";
 
 import { createSavedFood, getSavedFoodByBarcode } from "@/database/database";
+import { useAddFoodTarget } from "@/hooks/use-add-food-target";
 
 export default function ScannerScreen(){
     const router = useRouter();
@@ -56,7 +57,7 @@ export default function ScannerScreen(){
 
     const servingCount = Number(servings);
 
-    const { date } = useLocalSearchParams<{ date?: string }>();
+    const { date, meal } = useAddFoodTarget();
 
     const validServings =
         servings.trim() !== "" &&
@@ -164,6 +165,7 @@ export default function ScannerScreen(){
                 calories: calculatedCalories,
                 protein: calculatedProtein,
                 ...extraNutrition,
+                meal,
             }, date);
 
             Keyboard.dismiss();
