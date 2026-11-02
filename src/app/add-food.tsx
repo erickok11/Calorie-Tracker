@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
     Alert,
     Keyboard,
@@ -23,8 +23,6 @@ import UnitPicker from "@/components/UnitPicker";
 
 import {
     createSavedFood,
-    getSavedFood,
-    SavedFoodRow,
 } from "@/database/database";
 
 import { Ionicons } from "@expo/vector-icons";
@@ -46,7 +44,7 @@ export default function AddFoodScreen() {
     const [sodium, setSodium] = useState("");
     const { date, meal, forwardParams } = useAddFoodTarget();
 
-    const [ , setSavedFoods] = useState<SavedFoodRow[]>([]);
+    
     const [saveForLater, setSaveForLater ] = useState(false);
 
     const mealLabel = MEALS.find((m) => m.key === meal)?.label;
@@ -54,15 +52,6 @@ export default function AddFoodScreen() {
         ? new Date(`${date}T12:00:00`).toLocaleDateString("en-US", {
             weekday: "long", month: "long", day: "numeric",
         }) : undefined;
-
-    useEffect(() => {
-        const loadSavedFoods = async () => {
-            const foods = await getSavedFood();
-            setSavedFoods(foods);
-        };
-
-        loadSavedFoods();
-    }, []);
 
     const parseOptionalNumber = (
         value: string

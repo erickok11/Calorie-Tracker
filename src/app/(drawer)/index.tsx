@@ -376,45 +376,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  foodCard: {
-    backgroundColor: "white",
-    padding: 18,
-    borderRadius: 16,
-    marginBottom: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
-  foodName: {
-    fontSize: 17,
-    fontWeight: "600",
-  },
-
-  foodInfo: {
-    color: "#777",
-    marginTop: 5,
-  },
-
-  addButton: {
-    backgroundColor: "#3478F6",
-    borderRadius: 16,
-    padding: 17,
-    alignItems: "center",
-    marginTop: 10,
-  },
-
-  addButtonText: {
-    color: "white",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-
-  chevron: {
-    fontSize: 28,
-    color: "#AAA",
-  },
-
   goalsRow: {
     flexDirection: "row",
     gap: 12,

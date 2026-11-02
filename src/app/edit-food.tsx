@@ -21,6 +21,8 @@ import { FoodUnit } from "@/constants/unit";
 
 import UnitPicker from "@/components/UnitPicker";
 import { useFoodById } from "@/hooks/use-food-by-id";
+import { MealType } from "@/constants/meals";
+import MealPicker from "@/components/MealPicker";
 
 function parseOptionalNumber(value: string): number | null {
     if(value.trim() === ""){
@@ -95,6 +97,8 @@ function EditFoodForm({food}: {food: Food}){
         food.sodium_mg?.toString() ?? ""
     );
 
+    const [meal, setMeal] = useState<MealType | undefined>(food.meal);
+
     const handleSave = async () => {
         const amountNumber =
             amount.trim() === "" ? undefined : Number(amount);
@@ -147,6 +151,7 @@ function EditFoodForm({food}: {food: Food}){
             calories: calorieNum,
             protein: proteinNum,
             ...nutrients,
+            meal,
         });
 
         router.back();
@@ -179,6 +184,9 @@ function EditFoodForm({food}: {food: Food}){
                         value={name}
                         onChangeText={setName}
                     />
+
+                    <Text style={styles.label}>Meal</Text>
+                    <MealPicker value={meal} onChange={setMeal} />
 
                     <Text style={styles.label}>Amount</Text>
 

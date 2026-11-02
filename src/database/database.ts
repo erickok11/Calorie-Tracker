@@ -278,7 +278,7 @@ export async function insertFood(
     protein: number,
     date: string,
     nutrients: ExtraNutritionInput = {},
-    meal: MealType,
+    meal?: MealType,
 ){
     const database = await getDatabase();
 
